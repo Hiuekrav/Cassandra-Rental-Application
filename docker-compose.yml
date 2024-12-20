@@ -21,6 +21,11 @@ services:
       - CASSANDRA_PASSWORD=cassandrapassword
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
+    healthcheck:
+      test: [ "CMD-SHELL", "[ $$(nodetool statusgossip) = running ]" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
   cassandra2:
     image: docker.io/bitnami/cassandra:latest
     hostname: cassandra2
@@ -41,6 +46,11 @@ services:
       - CASSANDRA_PASSWORD=cassandrapassword
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
-
+    healthcheck:
+      test: [ "CMD-SHELL", "[ $$(nodetool statusgossip) = running ]" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 networks:
   cassandranet: {}
+
