@@ -2,7 +2,6 @@ package org.example.repositories.interfaces;
 
 import org.example.model.vehicle.Vehicle;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface IVehicleRepository extends IObjectRepository<Vehicle> {

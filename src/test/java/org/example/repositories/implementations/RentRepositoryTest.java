@@ -1,23 +1,6 @@
 package org.example.repositories.implementations;
 
-import org.example.model.*;
-import org.example.model.clientType.ClientType;
-import org.example.model.clientType.Silver;
-import org.example.model.vehicle.Bicycle;
-import org.example.model.vehicle.Car;
-import org.example.repositories.interfaces.IClientRepository;
-import org.example.repositories.interfaces.IRentRepository;
-import org.example.repositories.interfaces.IVehicleRepository;
-import org.example.utils.consts.DatabaseConstants;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 //class RentRepositoryTest {
 //

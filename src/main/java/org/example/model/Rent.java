@@ -1,14 +1,24 @@
 package org.example.model;
 
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.NamingStrategy;
+import com.datastax.oss.driver.api.mapper.annotations.PropertyStrategy;
+import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.example.mgd.RentMgd;
 import org.example.model.vehicle.Vehicle;
+import org.example.utils.consts.DatabaseConstants;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+
+//@Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
+//@CqlName(DatabaseConstants.RENT_TABLE)
+//@PropertyStrategy(mutable = false)
+//@NamingStrategy(convention = NamingConvention.LOWER_CAMEL_CASE)
 @SuperBuilder(toBuilder = true)
 @Getter @Setter
 public class Rent extends AbstractEntity {
@@ -34,21 +44,6 @@ public class Rent extends AbstractEntity {
         this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientType().getDiscount();
     }
 
-    public Rent(RentMgd rentMgd, Client client, Vehicle vehicle) {
-        super(rentMgd.getId());
-        this.beginTime = rentMgd.getBeginTime();
-        this.endTime = rentMgd.getEndTime();
-        this.rentCost = rentMgd.getRentCost();
-        this.client = client;
-        this.vehicle = vehicle;
-    }
-
-    public Rent(RentMgd rentMgd) {
-        super(rentMgd.getId());
-        this.beginTime = rentMgd.getBeginTime();
-        this.endTime = rentMgd.getEndTime();
-        this.rentCost = rentMgd.getRentCost();
-    }
 
     public Rent(UUID id, LocalDateTime endTime, Client client, Vehicle vehicle) {
         super(id);
@@ -59,5 +54,4 @@ public class Rent extends AbstractEntity {
         this.active = true;
         this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientType().getDiscount();
     }
-
 }

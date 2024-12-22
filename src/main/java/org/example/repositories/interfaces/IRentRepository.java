@@ -1,24 +1,24 @@
 package org.example.repositories.interfaces;
 
-import org.example.mgd.RentMgd;
+import org.example.model.Rent;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface IRentRepository extends IObjectRepository<RentMgd> {
+public interface IRentRepository extends IObjectRepository<Rent> {
 
-    RentMgd findActiveById(UUID id);
-    RentMgd findArchiveById(UUID id);
+    Rent findActiveById(UUID id);
+    Rent findArchiveById(UUID id);
 
     // By client
-    List<RentMgd> findAllActiveByClientId(UUID clientId);
-    List<RentMgd> findAllByClientId(UUID clientId);
-    List<RentMgd> findAllArchivedByClientId(UUID clientId);
+    List<Rent> findAllActiveByClientId(UUID clientId);
+    List<Rent> findAllByClientId(UUID clientId);
+    List<Rent> findAllArchivedByClientId(UUID clientId);
 
     // By vehicle
-    List<RentMgd> findAllActiveByVehicleId(UUID vehicleId);
-    List<RentMgd> findAllByVehicleId(UUID vehicleId);
-    List<RentMgd> findAllArchivedByVehicleId(UUID vehicleId);
+    List<Rent> findAllActiveByVehicleId(UUID vehicleId);
+    List<Rent> findAllByVehicleId(UUID vehicleId);
+    List<Rent> findAllArchivedByVehicleId(UUID vehicleId);
 
     void moveRentToArchived(UUID rentId);
 }

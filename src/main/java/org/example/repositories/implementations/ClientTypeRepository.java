@@ -1,17 +1,5 @@
 package org.example.repositories.implementations;
 
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.example.mgd.clientType.ClientTypeMgd;
-import org.example.mgd.clientType.DefaultMgd;
-import org.example.mgd.clientType.GoldMgd;
-import org.example.mgd.clientType.SilverMgd;
-import org.example.repositories.interfaces.IClientTypeRepository;
-import org.example.utils.consts.DatabaseConstants;
-import java.util.UUID;
 //
 //public class ClientTypeRepository extends ObjectRepository<ClientTypeMgd> implements IClientTypeRepository{
 //

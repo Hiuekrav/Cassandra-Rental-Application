@@ -1,17 +1,4 @@
 package org.example.repositories.implementations;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoCommandException;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.*;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.example.repositories.interfaces.IClientRepository;
-import org.example.utils.consts.DatabaseConstants;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 //
 //public class ClientRepository extends ObjectRepository<ClientMgd> implements IClientRepository {
 //

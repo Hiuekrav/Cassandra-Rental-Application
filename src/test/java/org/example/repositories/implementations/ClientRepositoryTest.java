@@ -1,33 +1,7 @@
 package org.example.repositories.implementations;
 
-import com.mongodb.*;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import org.bson.UuidRepresentation;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.Conventions;
-import org.bson.codecs.pojo.PojoCodecProvider;
-import org.example.mgd.ClientMgd;
-import org.example.mgd.clientType.ClientTypeMgd;
-import org.example.mgd.clientType.GoldMgd;
-import org.example.mgd.clientType.SilverMgd;
-import org.example.model.*;
-import org.example.model.clientType.ClientType;
-import org.example.model.clientType.Gold;
-import org.example.model.clientType.Silver;
-import org.example.repositories.interfaces.IClientRepository;
-import org.example.repositories.interfaces.IClientTypeRepository;
-import org.example.utils.consts.DatabaseConstants;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.util.List;
-import java.util.UUID;
 //
 //class ClientRepositoryTest {
 //

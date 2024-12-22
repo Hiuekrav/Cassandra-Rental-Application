@@ -1,7 +1,5 @@
 package org.example.repositories.interfaces;
 
-import com.mongodb.client.MongoClient;
-
 import java.util.List;
 import java.util.UUID;
 

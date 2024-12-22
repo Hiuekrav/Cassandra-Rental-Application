@@ -1,11 +1,11 @@
 package org.example.repositories.interfaces;
 
-import org.example.mgd.clientType.ClientTypeMgd;
+import org.example.model.clientType.ClientType;
 
 import java.util.UUID;
 
-public interface IClientTypeRepository extends IObjectRepository<ClientTypeMgd> {
+public interface IClientTypeRepository extends IObjectRepository<ClientType> {
 
-    ClientTypeMgd findAnyClientType(UUID id);
+    ClientType findAnyClientType(UUID id);
 
 }

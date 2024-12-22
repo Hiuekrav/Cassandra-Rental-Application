@@ -1,15 +1,16 @@
 package org.example.repositories.interfaces;
 
-import org.example.mgd.ClientMgd;
+
+import org.example.model.Client;
 
 import java.util.List;
 import java.util.UUID;
 
 
-public interface IClientRepository extends IObjectRepository<ClientMgd> {
-    ClientMgd findByEmail(String email);
+public interface IClientRepository extends IObjectRepository<Client> {
+    Client findByEmail(String email);
 
-    ClientMgd increaseActiveRents(UUID id, Integer number);
+    Client increaseActiveRents(UUID id, Integer number);
 
-    List<ClientMgd> findByType(Class<?> type);
+    List<Client> findByType(Class<?> type);
 }

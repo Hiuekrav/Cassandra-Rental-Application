@@ -1,30 +1,19 @@
 package org.example.utils.consts;
 
-import org.example.mgd.*;
 
 public class DatabaseConstants {
 
     //connection
-    public static final String connectionString = "mongodb://mongodb1:27017,mongodb2:27018,mongodb3:27019/?replicaSet=replica_set_three_nodes";
-
-    // redis
-    public static final String VEHICLE_PREFIX="vehicles/";
-    public static final String VEHICLE_INDEX="vehicle_id";
-    // abstractEntity
-    public static final String ID = "_id";
-
-    public static final String DATABASE_NAME = "rentacar";
-
-    //ClientEmbeddedMgd
-    public static final String CLIENT= "client";
+    public static final String RENT_A_CAR_NAMESPACE = "rent_a_car";
+    public static final String ID = "id";
 
     // Vehicle
-    public static final String BSON_DISCRIMINATOR_KEY = "_clazz";
-    public static final String VEHICLE= "vehicle";
+    public static final String VEHICLE_TABLE= "vehicle";
     public static final String VEHICLE_PLATE_NUMBER = "plateNumber";
     public static final String VEHICLE_BASE_PRICE = "basePrice";
     public static final String VEHICLE_ARCHIVE = "archive";
     public static final String VEHICLE_RENTED = "rented";
+    public static final String VEHICLE_DISCRIMINATOR = "discriminator";
 
     // MotorVehicle
     public static final String MOTOR_VEHICLE_ENGINE_DISPLACEMENT = "engineDisplacement";
@@ -59,7 +48,9 @@ public class DatabaseConstants {
 
     // Client
 
+    public static final String CLIENT_TABLE = "client";
     public static final String CLIENT_FIRST_NAME = "first_name";
+
     public static final String CLIENT_LAST_NAME = "last_name";
     public static final String CLIENT_EMAIL = "email";
     public static final String CLIENT_ACTIVE_RENTS = "active_rents";
@@ -72,6 +63,8 @@ public class DatabaseConstants {
 
 
     // Rent
+
+    public static final String RENT_TABLE = "rent";
 
     public static final String RENT_BEGIN_TIME = "begin_time";
     public static final String RENT_END_TIME = "end_time";
@@ -86,11 +79,5 @@ public class DatabaseConstants {
     public static final String RENT_ACTIVE_COLLECTION_NAME = "active_rents";
     public static final String RENT_ARCHIVE_COLLECTION_NAME = "archive_rents";
     public static final String CLIENT_TYPE_COLLECTION_NAME = "client_types";
-
-    //Collection types
-    public static final Class<ClientMgd> CLIENT_COLLECTION_TYPE = ClientMgd.class;
-    public static final Class<RentMgd> RENT_COLLECTION_TYPE = RentMgd.class;
-
-
-
+    
 }

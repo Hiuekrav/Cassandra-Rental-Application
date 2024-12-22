@@ -1,17 +1,5 @@
 package org.example.repositories.implementations;
 
-import org.example.model.vehicle.Moped;
-
-import org.example.repositories.interfaces.IVehicleRepository;
-import org.example.utils.consts.DatabaseConstants;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

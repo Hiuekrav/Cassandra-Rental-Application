@@ -1,6 +1,5 @@
 package org.example.services.interfaces;
 
-import com.mongodb.client.MongoClient;
 import org.example.commons.dto.create.RentCreateDTO;
 import org.example.model.Rent;
 
@@ -25,6 +24,4 @@ public interface IRentService extends IObjectService {
     Rent updateRent(UUID id, LocalDateTime endTime);
 
     void endRent(UUID id);
-
-    MongoClient getClient();
 }

@@ -1,15 +1,24 @@
 package org.example.model;
 
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.NamingStrategy;
+import com.datastax.oss.driver.api.mapper.annotations.PropertyStrategy;
+import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.example.mgd.ClientMgd;
 import org.example.model.clientType.ClientType;
+import org.example.utils.consts.DatabaseConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+//@Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
+//@CqlName(DatabaseConstants.CLIENT_TABLE)
+//@PropertyStrategy(mutable = false)
+//@NamingStrategy(convention = NamingConvention.LOWER_CAMEL_CASE)
 @SuperBuilder(toBuilder = true)
 @Getter @Setter
 public class Client extends AbstractEntity {
@@ -34,28 +43,5 @@ public class Client extends AbstractEntity {
         this.streetNumber = streetNumber;
         this.clientType = clientType;
     }
-
-
-    public Client(ClientMgd clientMgd) {
-        super(clientMgd.getId());
-        this.firstName = clientMgd.getFirstName();
-        this.lastName = clientMgd.getLastName();
-        this.email = clientMgd.getEmail();
-        this.cityName = clientMgd.getCityName();
-        this.streetName = clientMgd.getStreetName();
-        this.streetNumber = clientMgd.getStreetNumber();
-    }
-
-    public Client(ClientMgd clientMgd, ClientType clientType) {
-        super(clientMgd.getId());
-        this.firstName = clientMgd.getFirstName();
-        this.lastName = clientMgd.getLastName();
-        this.email = clientMgd.getEmail();
-        this.cityName = clientMgd.getCityName();
-        this.streetName = clientMgd.getStreetName();
-        this.streetNumber = clientMgd.getStreetNumber();
-        this.clientType = clientType;
-    }
-
 
 }

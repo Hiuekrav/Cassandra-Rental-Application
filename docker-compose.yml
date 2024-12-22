@@ -8,13 +8,14 @@ services:
       - "7000:7000"
       - "9042:9042"
     networks:
-      - cassandranet
+      cassandranet:
+        ipv4_address: 172.16.0.2
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandra1
       - CASSANDRA_BROADCAST_ADDRESS=cassandra1
       - CASSANDRA_SEEDS=cassandra1,cassandra2
       - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
-      - CASSANDRA_DATACENTER = del
+      - CASSANDRA_DATACENTER =dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_USER = cassandra
@@ -33,13 +34,14 @@ services:
       - "7001:7000"
       - "9043:9042"
     networks:
-      - cassandranet
+      cassandranet:
+        ipv4_address: 172.16.0.3
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandra2
       - CASSANDRA_BROADCAST_ADDRESS=cassandra2
       - CASSANDRA_SEEDS=cassandra1,cassandra2
       - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
-      - CASSANDRA_DATACENTER = del
+      - CASSANDRA_DATACENTER=dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_USER = cassandra
@@ -52,5 +54,11 @@ services:
       timeout: 10s
       retries: 5
 networks:
-  cassandranet: {}
+  cassandranet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.0.0/16"
+
 
