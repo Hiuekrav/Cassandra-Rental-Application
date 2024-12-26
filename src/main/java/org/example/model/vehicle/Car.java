@@ -32,9 +32,9 @@ public class Car extends MotorVehicle {
         this.transmissionType = type;
     }
 
-    public Car(UUID id, TransmissionType transmissionType, Integer engineDisplacement,
-               String plateNumber, Double basePrice, boolean archive, boolean rented, String discriminator) {
-        super(id, plateNumber, basePrice, archive, rented, discriminator, engineDisplacement);
+    public Car(UUID id,String discriminator, TransmissionType transmissionType, Integer engineDisplacement,
+               String plateNumber, Double basePrice, boolean archive, boolean rented) {
+        super(id, discriminator, plateNumber, basePrice, archive, rented, engineDisplacement);
         this.transmissionType = transmissionType;
     }
 }

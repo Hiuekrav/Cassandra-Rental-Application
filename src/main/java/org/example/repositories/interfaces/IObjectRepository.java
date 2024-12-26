@@ -5,7 +5,7 @@ import java.util.UUID;
 
 /**
  * Ogolne repozytorium, z bazowymi metodami dla wszystkich obiektow(encji)
- * @param <T> - mapper z klasy modelu na dokument
+ * @param <T> - obiekt klasy modelu
  */
 public interface IObjectRepository<T> {
 
@@ -13,9 +13,7 @@ public interface IObjectRepository<T> {
 
     T findByIdOrNull(UUID id);
 
-    List<T> findAll();
-
-    T save(T doc);
+    T save(T obj);
 
     void deleteById(UUID id);
 

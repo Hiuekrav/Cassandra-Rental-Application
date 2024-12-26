@@ -28,7 +28,7 @@ public class RentRepository implements IRentRepository {
     }
 
     @Override
-    public Rent save(Rent rentMgd) {
+    public Rent save(Rent obj) {
         return null;
     }
 

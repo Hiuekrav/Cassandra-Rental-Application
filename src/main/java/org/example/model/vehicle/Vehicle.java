@@ -1,9 +1,6 @@
 package org.example.model.vehicle;
 
-import com.datastax.oss.driver.api.mapper.annotations.CqlName;
-import com.datastax.oss.driver.api.mapper.annotations.Entity;
-import com.datastax.oss.driver.api.mapper.annotations.NamingStrategy;
-import com.datastax.oss.driver.api.mapper.annotations.PropertyStrategy;
+import com.datastax.oss.driver.api.mapper.annotations.*;
 import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -33,6 +30,7 @@ public class Vehicle extends AbstractEntity {
     private boolean rented;
 
     @CqlName(DatabaseConstants.VEHICLE_DISCRIMINATOR)
+    @ClusteringColumn
     private String discriminator;
 
     public Vehicle(UUID id, String plateNumber, Double basePrice, String discriminator) {
@@ -44,7 +42,7 @@ public class Vehicle extends AbstractEntity {
         this.discriminator = discriminator;
     }
 
-    public Vehicle(UUID id, String plateNumber, Double basePrice, boolean archive, boolean rented, String discriminator) {
+    public Vehicle(UUID id, String discriminator, String plateNumber, Double basePrice, boolean archive, boolean rented) {
         super(id);
         this.plateNumber = plateNumber;
         this.basePrice = basePrice;

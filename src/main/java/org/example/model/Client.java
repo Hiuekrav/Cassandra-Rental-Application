@@ -30,7 +30,6 @@ public class Client extends AbstractEntity {
     private String cityName;
     private String streetName;
     private String streetNumber;
-    private List<Rent> currentRents = new ArrayList<>();
 
     public Client(UUID id, String firstName, String lastName, String email,
                   ClientType clientType, String cityName, String streetName, String streetNumber) {

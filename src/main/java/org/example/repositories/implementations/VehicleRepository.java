@@ -2,19 +2,17 @@ package org.example.repositories.implementations;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.BatchStatement;
-import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
-import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
-import com.datastax.oss.driver.api.core.type.codec.registry.MutableCodecRegistry;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
-import com.datastax.oss.driver.internal.core.type.codec.CustomCodec;
 import org.example.codecs.TransmissionTypeCodec;
 import org.example.dao.VehicleDao;
 import org.example.dao.VehicleMapperBuilder;
+import org.example.model.vehicle.Bicycle;
+import org.example.model.vehicle.Car;
+import org.example.model.vehicle.Moped;
 import org.example.model.vehicle.Vehicle;
 import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.utils.consts.DatabaseConstants;
@@ -87,7 +85,16 @@ public class VehicleRepository implements IVehicleRepository {
 
         session.execute(createVehicleTable);
 
-        // Create unique index table for plate_number
+        // Create index to enable searching by plate number
+        SimpleStatement createIndex = SchemaBuilder.createIndex(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX)
+                .ifNotExists()
+                .onTable(DatabaseConstants.VEHICLE_TABLE)
+                .andColumn(DatabaseConstants.VEHICLE_PLATE_NUMBER)
+                .build();
+
+        session.execute(createIndex);
+
+        // Create index table for plate_number, to guarantee its uniqueness
         SimpleStatement createUniqueIndexTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE)
                 .ifNotExists()
                 .withPartitionKey("plate_number", DataTypes.TEXT)
@@ -107,8 +114,7 @@ public class VehicleRepository implements IVehicleRepository {
 
     @Override
     public Vehicle findByPlateNumber(String plateNumber) {
-        //todo implement
-        return null;
+        return vehicleDao.findByPlateNumber(plateNumber);
     }
 
     @Override
@@ -125,20 +131,38 @@ public class VehicleRepository implements IVehicleRepository {
         }
     }
 
+
     @Override
-    public List<Vehicle> findAll() {
-        //todo implement
-        return null;
+    public List<Car> findAllCars() {
+        return vehicleDao.findAllCars();
     }
 
     @Override
-    public Vehicle save(Vehicle doc) {
-        return null;
+    public List<Bicycle> findAllBicycles() {
+        return vehicleDao.findAllBicycles();
+    }
+
+    @Override
+    public List<Moped> findAllMoped() {
+        return vehicleDao.findAllMoped();
+    }
+
+
+    @Override
+    public Vehicle save(Vehicle obj) {
+        Vehicle foundVehicle = findByIdOrNull(obj.getId());
+        if (foundVehicle == null) {
+            vehicleDao.create(obj);
+        } else {
+            vehicleDao.update(obj);
+        }
+        return findById(obj.getId());
     }
 
     @Override
     public void deleteById(UUID id) {
-        return;
+        Vehicle foundVehicle = vehicleDao.findById(id);
+        vehicleDao.remove(foundVehicle);
     }
 
     @Override

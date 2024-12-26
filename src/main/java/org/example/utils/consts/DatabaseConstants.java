@@ -14,7 +14,8 @@ public class DatabaseConstants {
     public static final String VEHICLE_ARCHIVE = "archive";
     public static final String VEHICLE_RENTED = "rented";
     public static final String VEHICLE_DISCRIMINATOR = "discriminator";
-    public static final String VEHICLE_PLATE_NUMBER_INDEX_TABLE = "vehicle_plate_number_index";
+    public static final String VEHICLE_PLATE_NUMBER_INDEX = "vehicle_plate_number_idx";
+    public static final String VEHICLE_PLATE_NUMBER_INDEX_TABLE = "vehicle_plate_number_index_table";
 
     // MotorVehicle
     public static final String MOTOR_VEHICLE_ENGINE_DISPLACEMENT = "engine_displacement";

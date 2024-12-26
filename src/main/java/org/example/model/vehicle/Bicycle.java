@@ -27,13 +27,13 @@ public class Bicycle extends Vehicle {
     private Integer pedalsNumber;
 
     public Bicycle(UUID id, String plateNumber, Double basePrice, Integer pedalsNumber) {
-        super(id, plateNumber, basePrice, DatabaseConstants.MOPED_DISCRIMINATOR);
+        super(id, plateNumber, basePrice, DatabaseConstants.BICYCLE_DISCRIMINATOR);
         this.pedalsNumber = pedalsNumber;
     }
 
-    public Bicycle(UUID id,Integer pedalsNumber, String plateNumber,
-                   Double basePrice, boolean archive, boolean rented, String discriminator) {
-        super(id, plateNumber, basePrice, archive, rented, discriminator);
+    public Bicycle(UUID id, String discriminator, Integer pedalsNumber, String plateNumber,
+                   Double basePrice, boolean archive, boolean rented) {
+        super(id, discriminator, plateNumber, basePrice, archive, rented);
         this.pedalsNumber = pedalsNumber;
     }
 }

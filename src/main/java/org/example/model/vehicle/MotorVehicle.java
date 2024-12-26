@@ -26,8 +26,8 @@ public class MotorVehicle extends Vehicle {
         this.engineDisplacement = engineDisplacement;
     }
 
-    public MotorVehicle(UUID id, String plateNumber, Double basePrice, boolean archive, boolean rented, String discriminator, Integer engineDisplacement) {
-        super(id, plateNumber, basePrice, archive, rented, discriminator);
+    public MotorVehicle(UUID id, String discriminator, String plateNumber, Double basePrice, boolean archive, boolean rented, Integer engineDisplacement) {
+        super(id, discriminator, plateNumber, basePrice, archive, rented);
         this.engineDisplacement = engineDisplacement;
     }
 }
