@@ -37,6 +37,11 @@ public class RentRepository implements IRentRepository {
 
     }
 
+    @Override
+    public void deleteAll() {
+
+    }
+
     public void moveRentToArchived(UUID rentId) {
         return;
     }

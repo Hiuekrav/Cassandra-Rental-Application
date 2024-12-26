@@ -2,16 +2,18 @@ package org.example.repositories.implementations;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BatchStatement;
+import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
-import com.datastax.oss.driver.api.core.session.Session;
 
-import com.datastax.oss.driver.api.core.type.DataType;
 import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.core.type.codec.registry.CodecRegistry;
+import com.datastax.oss.driver.api.core.type.codec.registry.MutableCodecRegistry;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
-import com.datastax.oss.driver.api.querybuilder.schema.Drop;
+import com.datastax.oss.driver.internal.core.type.codec.CustomCodec;
+import org.example.codecs.TransmissionTypeCodec;
 import org.example.dao.VehicleDao;
-import org.example.dao.VehicleMapper;
 import org.example.dao.VehicleMapperBuilder;
 import org.example.model.vehicle.Vehicle;
 import org.example.repositories.interfaces.IVehicleRepository;
@@ -37,6 +39,7 @@ public class VehicleRepository implements IVehicleRepository {
 
 
     public VehicleRepository() {
+
         this.session = CqlSession.builder( )
                 .addContactPoint(new InetSocketAddress("cassandra1", 9042))
                 .addContactPoint(new InetSocketAddress("cassandra2", 9043))
@@ -45,10 +48,11 @@ public class VehicleRepository implements IVehicleRepository {
                 .build();
 
         //todo fix timeout error while dropping the keyspace
-
         // Drop keyspace if exists
-        //Drop dropKeyspace = SchemaBuilder.dropKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE)).ifExists();
-        //SimpleStatement dropKeyspaceStatement = dropKeyspace.build();
+        //SimpleStatement dropKeyspaceStatement = SchemaBuilder
+        //        .dropKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
+        //        .ifExists()
+        //        .build();
         //session.execute(dropKeyspaceStatement);
 
         CreateKeyspace keyspace = createKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
@@ -64,7 +68,8 @@ public class VehicleRepository implements IVehicleRepository {
                 .addContactPoint(new InetSocketAddress("cassandra2", 9043))
                 .withLocalDatacenter("dc1")
                 .withAuthCredentials("cassandra", "cassandrapassword")
-                .withKeyspace(CqlIdentifier.fromCql("rent_a_car"))
+                .withKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
+                .addTypeCodecs(new TransmissionTypeCodec())
                 .build();
 
         SimpleStatement createVehicleTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_TABLE)
@@ -82,11 +87,16 @@ public class VehicleRepository implements IVehicleRepository {
 
         session.execute(createVehicleTable);
 
-
+        // Create unique index table for plate_number
+        SimpleStatement createUniqueIndexTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE)
+                .ifNotExists()
+                .withPartitionKey("plate_number", DataTypes.TEXT)
+                .withColumn("id", DataTypes.UUID)
+                .build();
+        session.execute(createUniqueIndexTable);
 
         vehicleDao = new VehicleMapperBuilder(this.session).build().getVehicleDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
                 DatabaseConstants.VEHICLE_TABLE);
-
     }
 
     public void create(Vehicle vehicle) {
@@ -128,19 +138,26 @@ public class VehicleRepository implements IVehicleRepository {
 
     @Override
     public void deleteById(UUID id) {
-
-    }
-
-
-    @Override
-    public Vehicle findAnyVehicle(UUID id) {
-        //todo implement
-        return null;
+        return;
     }
 
     @Override
     public Vehicle changeRentedStatus(UUID id, Boolean status) {
         //todo implement
         return null;
+    }
+
+    @Override
+    public void deleteAll() {
+        SimpleStatement dropVehicles = SchemaBuilder
+                .dropTable(DatabaseConstants.VEHICLE_TABLE)
+                .ifExists()
+                .build();
+        SimpleStatement dropPlateNumberIndex = SchemaBuilder
+                .dropTable(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE)
+                .ifExists()
+                .build();
+        session.execute(dropVehicles);
+        session.execute(dropPlateNumberIndex);
     }
 }

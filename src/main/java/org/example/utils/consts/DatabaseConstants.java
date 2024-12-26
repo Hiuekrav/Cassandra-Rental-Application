@@ -9,14 +9,15 @@ public class DatabaseConstants {
 
     // Vehicle
     public static final String VEHICLE_TABLE= "vehicle";
-    public static final String VEHICLE_PLATE_NUMBER = "plateNumber";
-    public static final String VEHICLE_BASE_PRICE = "basePrice";
+    public static final String VEHICLE_PLATE_NUMBER = "plate_number";
+    public static final String VEHICLE_BASE_PRICE = "base_price";
     public static final String VEHICLE_ARCHIVE = "archive";
     public static final String VEHICLE_RENTED = "rented";
     public static final String VEHICLE_DISCRIMINATOR = "discriminator";
+    public static final String VEHICLE_PLATE_NUMBER_INDEX_TABLE = "vehicle_plate_number_index";
 
     // MotorVehicle
-    public static final String MOTOR_VEHICLE_ENGINE_DISPLACEMENT = "engineDisplacement";
+    public static final String MOTOR_VEHICLE_ENGINE_DISPLACEMENT = "engine_displacement";
 
     // Moped
     public static final String MOPED_DISCRIMINATOR = "moped";
@@ -24,12 +25,12 @@ public class DatabaseConstants {
     //Car
     public static final String CAR_DISCRIMINATOR = "car";
 
-    public static final String CAR_TRANSMISSION_TYPE = "transmissionType";
+    public static final String CAR_TRANSMISSION_TYPE = "transmission_type";
 
     // Bicycle
     public static final String BICYCLE_DISCRIMINATOR = "bicycle";
 
-    public static final String BICYCLE_PEDAL_NUMBER = "pedalsNumber";
+    public static final String BICYCLE_PEDAL_NUMBER = "pedal_number";
 
 
 

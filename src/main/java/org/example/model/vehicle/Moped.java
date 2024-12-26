@@ -15,7 +15,7 @@ import java.util.UUID;
 @Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
 @CqlName(DatabaseConstants.VEHICLE_TABLE)
 @PropertyStrategy(mutable = false)
-@NamingStrategy(convention = NamingConvention.LOWER_CAMEL_CASE)
+@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 @SuperBuilder(toBuilder = true)
 @Getter @Setter
 public class Moped extends MotorVehicle {

@@ -18,7 +18,7 @@ import java.util.UUID;
 @Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
 @CqlName(DatabaseConstants.VEHICLE_TABLE)
 @PropertyStrategy(mutable = false)
-@NamingStrategy(convention = NamingConvention.LOWER_CAMEL_CASE)
+@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 @SuperBuilder(toBuilder = true)
 @Setter @Getter
 public class Bicycle extends Vehicle {
@@ -31,7 +31,8 @@ public class Bicycle extends Vehicle {
         this.pedalsNumber = pedalsNumber;
     }
 
-    public Bicycle(UUID id,Integer pedalsNumber, String plateNumber, Double basePrice, boolean archive, boolean rented, String discriminator) {
+    public Bicycle(UUID id,Integer pedalsNumber, String plateNumber,
+                   Double basePrice, boolean archive, boolean rented, String discriminator) {
         super(id, plateNumber, basePrice, archive, rented, discriminator);
         this.pedalsNumber = pedalsNumber;
     }

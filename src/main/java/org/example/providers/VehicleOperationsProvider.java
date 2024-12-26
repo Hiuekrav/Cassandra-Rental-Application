@@ -3,6 +3,7 @@ package org.example.providers;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.mapper.MapperContext;
 import com.datastax.oss.driver.api.mapper.entity.EntityHelper;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
@@ -18,14 +19,14 @@ import java.util.UUID;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 
-public class VehicleGetByIdProvider {
+public class VehicleOperationsProvider {
     private final CqlSession session;
     private EntityHelper<Bicycle> bicycleEntityHelper;
     private EntityHelper<Car> carEntityHelper;
     private EntityHelper<Moped> mopedEntityHelper;
 
-    public VehicleGetByIdProvider(MapperContext context, EntityHelper<Bicycle> bicycleEntityHelper,
-                                  EntityHelper<Car> carEntityHelper, EntityHelper<Moped> mopedEntityHelper) {
+    public VehicleOperationsProvider(MapperContext context, EntityHelper<Bicycle> bicycleEntityHelper,
+                                     EntityHelper<Car> carEntityHelper, EntityHelper<Moped> mopedEntityHelper) {
         this.session = context.getSession();
         this.bicycleEntityHelper = bicycleEntityHelper;
         this.carEntityHelper = carEntityHelper;
@@ -33,6 +34,18 @@ public class VehicleGetByIdProvider {
     }
 
     public void create(Vehicle vehicle) {
+
+        SimpleStatement insertPlateNumber = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE)
+                .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(vehicle.getPlateNumber()))
+                .value(DatabaseConstants.ID, literal(vehicle.getId()))
+                .ifNotExists()
+                .build();
+
+        boolean success = session.execute(insertPlateNumber).wasApplied();
+        if (!success) {
+            throw new RuntimeException("Vehicle plate number " + vehicle.getPlateNumber() + " already exists");
+        }
+
         session.execute(
                 switch (vehicle.getDiscriminator()) {
                     case DatabaseConstants.BICYCLE_DISCRIMINATOR -> {
@@ -43,6 +56,7 @@ public class VehicleGetByIdProvider {
                                 .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, bicycle.getDiscriminator())
                                 .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, bicycle.getPlateNumber())
                                 .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, bicycle.getBasePrice())
+                                .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, bicycle.isArchive())
                                 .setInt(DatabaseConstants.BICYCLE_PEDAL_NUMBER, bicycle.getPedalsNumber());
                     }
 
@@ -54,6 +68,7 @@ public class VehicleGetByIdProvider {
                                 .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, car.getDiscriminator())
                                 .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, car.getPlateNumber())
                                 .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, car.getBasePrice())
+                                .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, car.isArchive())
                                 .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, car.getEngineDisplacement())
                                 .setString(DatabaseConstants.CAR_TRANSMISSION_TYPE, car.getTransmissionType().toString());
                     }
@@ -65,6 +80,7 @@ public class VehicleGetByIdProvider {
                                 .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, moped.getDiscriminator())
                                 .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, moped.getPlateNumber())
                                 .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, moped.getBasePrice())
+                                .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, moped.isArchive())
                                 .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, moped.getEngineDisplacement());
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + vehicle.getDiscriminator());
@@ -91,13 +107,35 @@ public class VehicleGetByIdProvider {
         };
     }
 
+    public Vehicle findByPlateNumber(String plateNumber) {
+        Select findVehicle = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
+                .all().where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(plateNumber)));
+
+        Row row = session.execute(findVehicle.build()).one();
+
+        if (row == null) {
+            throw new RuntimeException("Could not find vehicle with plate number: " + plateNumber);
+        }
+
+        String discriminator = row.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR);
+        return switch (discriminator) {
+            case DatabaseConstants.BICYCLE_DISCRIMINATOR -> getBicycle(row);
+            case DatabaseConstants.CAR_DISCRIMINATOR -> getCar(row);
+            case DatabaseConstants.MOPED_DISCRIMINATOR -> getMoped(row);
+            default -> throw new IllegalArgumentException("Invalid discriminator: " + discriminator);
+        };
+    }
+
 
     private Bicycle getBicycle(Row row) {
         return new Bicycle(
                 row.getUuid(DatabaseConstants.ID),
+                row.getInt(DatabaseConstants.BICYCLE_PEDAL_NUMBER),
                 row.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER),
                 row.getDouble(DatabaseConstants.VEHICLE_BASE_PRICE),
-                row.getInt(DatabaseConstants.BICYCLE_PEDAL_NUMBER)
+                row.getBoolean(DatabaseConstants.VEHICLE_ARCHIVE),
+                row.getBoolean(DatabaseConstants.VEHICLE_RENTED),
+                row.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR)
         );
     }
 
@@ -105,19 +143,25 @@ public class VehicleGetByIdProvider {
     private Car getCar(Row row) {
         return new Car(
                 row.getUuid(DatabaseConstants.ID),
+                Car.TransmissionType.valueOf(row.getString(DatabaseConstants.CAR_TRANSMISSION_TYPE)),
+                row.getInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT),
                 row.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER),
                 row.getDouble(DatabaseConstants.VEHICLE_BASE_PRICE),
-                row.getInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT),
-                Car.TransmissionType.valueOf(row.getString(DatabaseConstants.CAR_TRANSMISSION_TYPE))
+                row.getBoolean(DatabaseConstants.VEHICLE_ARCHIVE),
+                row.getBoolean(DatabaseConstants.VEHICLE_RENTED),
+                row.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR)
         );
     }
 
     private Moped getMoped(Row row) {
         return new Moped(
                 row.getUuid(DatabaseConstants.ID),
+                row.getInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT),
                 row.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER),
                 row.getDouble(DatabaseConstants.VEHICLE_BASE_PRICE),
-                row.getInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT)
+                row.getBoolean(DatabaseConstants.VEHICLE_ARCHIVE),
+                row.getBoolean(DatabaseConstants.VEHICLE_RENTED),
+                row.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR)
         );
     }
 

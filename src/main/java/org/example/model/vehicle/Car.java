@@ -14,7 +14,7 @@ import java.util.UUID;
 @Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
 @CqlName(DatabaseConstants.VEHICLE_TABLE)
 @PropertyStrategy(mutable = false)
-@NamingStrategy(convention = NamingConvention.LOWER_CAMEL_CASE)
+@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 @SuperBuilder(toBuilder = true)
 @Getter @Setter
 public class Car extends MotorVehicle {
@@ -25,14 +25,15 @@ public class Car extends MotorVehicle {
     }
 
     @CqlName(DatabaseConstants.CAR_TRANSMISSION_TYPE)
-    private String transmissionType;
+    private TransmissionType transmissionType;
 
     public Car(UUID id, String plateNumber, Double basePrice, Integer engine_displacement, TransmissionType type) {
         super(id, plateNumber, basePrice, engine_displacement, DatabaseConstants.CAR_DISCRIMINATOR);
-        this.transmissionType = type.toString();
+        this.transmissionType = type;
     }
 
-    public Car(UUID id, String transmissionType, Integer engineDisplacement, String plateNumber, Double basePrice, boolean archive, boolean rented, String discriminator) {
+    public Car(UUID id, TransmissionType transmissionType, Integer engineDisplacement,
+               String plateNumber, Double basePrice, boolean archive, boolean rented, String discriminator) {
         super(id, plateNumber, basePrice, archive, rented, discriminator, engineDisplacement);
         this.transmissionType = transmissionType;
     }

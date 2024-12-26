@@ -55,6 +55,8 @@ class CarRepositoryTest {
 
     @AfterEach
     void dropDatabase() {
+        //todo deleteAll method
+        //carRepository.deleteAll();
 
     }
 
@@ -80,14 +82,14 @@ class CarRepositoryTest {
 
     @Test
     void createCar_UniquePlateNumberException() {
-//        String plateNumber = "AAA1234";
-//        Car car = new Car(UUID.randomUUID(), plateNumber, 100.0,3, Car.TransmissionType.MANUAL);
-//        carRepository.save(new CarMgd(car));
-//        assertEquals(car.getId(), carRepository.findById(car.getId()).getId());
-//        Car duplicatedPlate = new Car(UUID.randomUUID(), plateNumber, 1000.0,6, Car.TransmissionType.AUTOMATIC);
-//        assertThrows(RuntimeException.class,
-//                ()-> carRepository.save(new CarMgd(duplicatedPlate)));
-//        assertEquals(1, carRepository.findAll().size());
+        //String plateNumber = "AAA1234";
+        //Car car = new Car(UUID.randomUUID(), plateNumber, 100.0,3, Car.TransmissionType.MANUAL);
+        //carRepository.save(new CarMgd(car));
+        //assertEquals(car.getId(), carRepository.findById(car.getId()).getId());
+        //Car duplicatedPlate = new Car(UUID.randomUUID(), plateNumber, 1000.0,6, Car.TransmissionType.AUTOMATIC);
+        //assertThrows(RuntimeException.class,
+        //        ()-> carRepository.save(new CarMgd(duplicatedPlate)));
+        //assertEquals(1, carRepository.findAll().size());
     }
 
     @Test

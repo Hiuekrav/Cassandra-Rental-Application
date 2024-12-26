@@ -18,4 +18,6 @@ public interface IObjectRepository<T> {
     T save(T doc);
 
     void deleteById(UUID id);
+
+    void deleteAll();
 }
