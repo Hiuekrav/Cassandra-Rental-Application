@@ -16,23 +16,6 @@ import java.nio.charset.StandardCharsets;
 
 public class TransmissionTypeCodec implements TypeCodec<TransmissionType> {
 
-    //public TransmissionTypeCodec() {
-    //    super(TypeCodecs.TEXT, GenericType.of(Car.TransmissionType.class));
-    //}
-    //
-    //@Nullable
-    //@Override
-    //protected Car.TransmissionType innerToOuter(@Nullable String s) {
-    //    return s == null ? null : Car.TransmissionType.valueOf(s.toUpperCase());
-    //}
-    //
-    //@Nullable
-    //@Override
-    //protected String outerToInner(@Nullable Car.TransmissionType transmissionType) {
-    //    return transmissionType == null ? null : transmissionType.name().toLowerCase();
-    //}
-
-
     @Override
     public GenericType<TransmissionType> getJavaType() {
         return GenericType.of(TransmissionType.class);

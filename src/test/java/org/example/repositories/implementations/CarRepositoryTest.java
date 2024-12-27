@@ -1,9 +1,13 @@
 package org.example.repositories.implementations;
 
+import org.example.dao.VehicleDao;
+import org.example.dao.VehicleMapper;
 import org.example.model.vehicle.Car;
+import org.example.model.vehicle.Vehicle;
 import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.utils.consts.DatabaseConstants;
 import org.junit.jupiter.api.*;
+import org.example.dao.VehicleMapperBuilder;
 
 import java.util.UUID;
 
@@ -12,14 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CarRepositoryTest {
 
-    private IVehicleRepository vehicleRepository;
+    private final IVehicleRepository vehicleRepository = new VehicleRepository();
+
+    // Nie panikuj, intellij nie wykrywa tej wygenerowanej klasy z folderu target, ale działa!
+    private final VehicleDao dao = new VehicleMapperBuilder(this.vehicleRepository.getSession()).build().getVehicleDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
+                                                                                            DatabaseConstants.VEHICLE_TABLE);
 
     @BeforeEach
-    void setUp() {
-        vehicleRepository = new VehicleRepository();
-    }
-
-    @AfterEach
     void dropDatabase() {
         vehicleRepository.deleteAll();
     }
@@ -78,8 +81,23 @@ class CarRepositoryTest {
         vehicleRepository.save(modifiedCar);
         assertEquals(newPrice, vehicleRepository.findById(car.getId()).getBasePrice());
         Car updatedCar = (Car) vehicleRepository.findById(car.getId());
-        //todo fix: enum value is not updated?
         assertEquals(newTransmissionType, updatedCar.getTransmissionType());
+    }
+
+    @Test
+    void updateCar_OptimisticLockException() {
+        Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
+        Vehicle foundVehicle = vehicleRepository.save(car);
+        Double newPrice = 200.0;
+        Car.TransmissionType newTransmissionType = Car.TransmissionType.AUTOMATIC;
+        Car modifiedCar = Car.builder()
+                .basePrice(newPrice)
+                .id(car.getId())
+                .discriminator(DatabaseConstants.CAR_DISCRIMINATOR)
+                .transmissionType(newTransmissionType).build();
+        assertTrue(dao.update(foundVehicle.getVersion(), modifiedCar));
+        assertEquals(newPrice, vehicleRepository.findById(car.getId()).getBasePrice());
+        assertFalse(dao.update(foundVehicle.getVersion(), modifiedCar));
     }
 
     @Test
@@ -91,22 +109,19 @@ class CarRepositoryTest {
         assertEquals(0, vehicleRepository.findAllCars().size());
     }
 
-    //@Test
-    //void changeRentedStatus() {
-    //    Car car = new Car(UUID.randomUUID(), "CB123", 200.0,30, Car.TransmissionType.AUTOMATIC);
-    //    carRepository.save(new CarMgd(car));
-    //    carRepository.changeRentedStatus(car.getId(), true);
-    //    assertEquals(1, carRepository.findById(car.getId()).getRented());
-    //    assertThrows(MongoWriteException.class, ()-> carRepository.changeRentedStatus(car.getId(), true));
-    //}
+    @Test
+    void changeRentedStatus() {
+        Car car = new Car(UUID.randomUUID(), "CB123", 200.0,30, Car.TransmissionType.AUTOMATIC);
+        vehicleRepository.save(car);
+        vehicleRepository.changeRentedStatus(car.getId(), true);
+        assertTrue(vehicleRepository.findById(car.getId()).isRented());
+    }
 
     @Test
-    void changeRentedStatus_VehicleRepostory() {
-//        Car car = new Car(UUID.randomUUID(), "CB123", 200.0,30, Car.TransmissionType.AUTOMATIC);
-//        carRepository.save(new CarMgd(car));
-//        VehicleMgd vehicleMgd = vehicleRepository.findAnyVehicle(car.getId());
-//        assertEquals(CarMgd.class, vehicleMgd.getClass());
-//        vehicleRepository.changeRentedStatus(vehicleMgd.getId(), true);
-//        assertEquals(1, carRepository.findById(car.getId()).getRented());
+    void changeRentedStatus_OptimisticLockException() {
+        Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
+        Vehicle savedCar = vehicleRepository.save(car);
+        assertTrue(dao.updateRented(savedCar, true));
+        assertFalse(dao.updateRented(savedCar, true));
     }
 }

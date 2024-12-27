@@ -1,5 +1,7 @@
 package org.example.repositories.interfaces;
 
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.session.Session;
 import org.example.model.vehicle.Bicycle;
 import org.example.model.vehicle.Car;
 import org.example.model.vehicle.Moped;
@@ -19,6 +21,8 @@ public interface IVehicleRepository extends IObjectRepository<Vehicle> {
     List<Moped> findAllMoped();
 
     Vehicle changeRentedStatus(UUID id, Boolean status);
+
+    CqlSession getSession();
 
 
 }

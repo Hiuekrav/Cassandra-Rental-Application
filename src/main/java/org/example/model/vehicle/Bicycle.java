@@ -32,8 +32,8 @@ public class Bicycle extends Vehicle {
     }
 
     public Bicycle(UUID id, String discriminator, Integer pedalsNumber, String plateNumber,
-                   Double basePrice, boolean archive, boolean rented) {
-        super(id, discriminator, plateNumber, basePrice, archive, rented);
+                   Double basePrice, boolean archive, boolean rented, Integer version) {
+        super(id, discriminator, plateNumber, basePrice, archive, rented, version);
         this.pedalsNumber = pedalsNumber;
     }
 }

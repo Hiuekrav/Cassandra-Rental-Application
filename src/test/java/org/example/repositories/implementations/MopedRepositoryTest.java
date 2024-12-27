@@ -14,14 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MopedRepositoryTest {
 
-    private IVehicleRepository vehicleRepository;
+    private final IVehicleRepository vehicleRepository = new VehicleRepository();
 
     @BeforeEach
-    void setUp() {
-        vehicleRepository = new VehicleRepository();
-    }
-
-    @AfterEach
     void dropDatabase() {
         vehicleRepository.deleteAll();
     }

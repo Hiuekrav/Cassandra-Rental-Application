@@ -24,7 +24,8 @@ public class Moped extends MotorVehicle {
         super(id, plateNumber, basePrice, engine_displacement, DatabaseConstants.MOPED_DISCRIMINATOR);
     }
 
-    public Moped(UUID id, String discriminator, Integer engineDisplacement, String plateNumber, Double basePrice, boolean archive, boolean rented) {
-        super(id, discriminator, plateNumber, basePrice, archive, rented, engineDisplacement);
+    public Moped(UUID id, String discriminator, Integer engineDisplacement, String plateNumber,
+                 Double basePrice, boolean archive, boolean rented, Integer version) {
+        super(id, discriminator, plateNumber, basePrice, archive, rented, engineDisplacement, version);
     }
 }

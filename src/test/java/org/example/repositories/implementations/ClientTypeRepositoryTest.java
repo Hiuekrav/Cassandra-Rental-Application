@@ -7,36 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 //
 //        private IClientTypeRepository clientTypeRepository;
 //
-//        private static MongoClient client;
 //
-//
-//        @BeforeAll
-//        static void connect() {
-//                ConnectionString connectionString = new ConnectionString(DatabaseConstants.connectionString);
-//
-//                MongoCredential credential = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
-//
-//                CodecRegistry pojoCodecRegistry = CodecRegistries.fromProviders(PojoCodecProvider.builder()
-//                        .automatic(true)
-//                        .conventions(List.of(Conventions.ANNOTATION_CONVENTION)).build());
-//
-//                MongoClientSettings settings = MongoClientSettings.builder()
-//                        .credential(credential)
-//                        .applyConnectionString(connectionString)
-//                        .uuidRepresentation(UuidRepresentation.STANDARD)
-//                        .codecRegistry(
-//                                CodecRegistries.fromRegistries(
-//                                        MongoClientSettings.getDefaultCodecRegistry(),
-//                                        pojoCodecRegistry
-//                                ))
-//                        .readConcern(ReadConcern.MAJORITY)
-//                        .writeConcern(WriteConcern.MAJORITY)
-//                        .readPreference(ReadPreference.primary())
-//                        .build();
-//
-//                client = MongoClients.create(settings);
-//                client.getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.CLIENT_TYPE_COLLECTION_NAME).drop();
-//        }
 //
 //        @BeforeEach
 //        void setUp() {

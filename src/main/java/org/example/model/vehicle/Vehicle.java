@@ -29,6 +29,9 @@ public class Vehicle extends AbstractEntity {
     @CqlName(DatabaseConstants.VEHICLE_RENTED)
     private boolean rented;
 
+    @CqlName(DatabaseConstants.VEHICLE_VERSION)
+    private Integer version = 0;
+
     @CqlName(DatabaseConstants.VEHICLE_DISCRIMINATOR)
     @ClusteringColumn
     private String discriminator;
@@ -40,14 +43,16 @@ public class Vehicle extends AbstractEntity {
         this.archive = false;
         this.rented = false;
         this.discriminator = discriminator;
+        version = 0;
     }
 
-    public Vehicle(UUID id, String discriminator, String plateNumber, Double basePrice, boolean archive, boolean rented) {
+    public Vehicle(UUID id, String discriminator, String plateNumber, Double basePrice, boolean archive, boolean rented, Integer version) {
         super(id);
         this.plateNumber = plateNumber;
         this.basePrice = basePrice;
         this.archive = archive;
         this.rented = rented;
         this.discriminator = discriminator;
+        this.version = version;
     }
 }

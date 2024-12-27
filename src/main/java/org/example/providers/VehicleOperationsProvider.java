@@ -2,10 +2,7 @@ package org.example.providers;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.BatchStatement;
-import com.datastax.oss.driver.api.core.cql.BatchType;
-import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.cql.*;
 import com.datastax.oss.driver.api.mapper.MapperContext;
 import com.datastax.oss.driver.api.mapper.annotations.ClusteringColumn;
 import com.datastax.oss.driver.api.mapper.annotations.CqlName;
@@ -15,6 +12,7 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.relation.Relation;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.api.querybuilder.update.Update;
+import org.example.codecs.TransmissionTypeCodec;
 import org.example.model.vehicle.Bicycle;
 import org.example.model.vehicle.Car;
 import org.example.model.vehicle.Moped;
@@ -63,6 +61,7 @@ public class VehicleOperationsProvider {
                                 .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, bicycle.getPlateNumber())
                                 .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, bicycle.getBasePrice())
                                 .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, bicycle.isArchive())
+                                .setInt(DatabaseConstants.VEHICLE_VERSION, bicycle.getVersion())
                                 .setInt(DatabaseConstants.BICYCLE_PEDAL_NUMBER, bicycle.getPedalsNumber());
                     }
 
@@ -75,6 +74,7 @@ public class VehicleOperationsProvider {
                                 .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, car.getPlateNumber())
                                 .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, car.getBasePrice())
                                 .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, car.isArchive())
+                                .setInt(DatabaseConstants.VEHICLE_VERSION, car.getVersion())
                                 .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, car.getEngineDisplacement())
                                 .setString(DatabaseConstants.CAR_TRANSMISSION_TYPE, car.getTransmissionType().toString());
                     }
@@ -87,6 +87,7 @@ public class VehicleOperationsProvider {
                                 .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, moped.getPlateNumber())
                                 .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, moped.getBasePrice())
                                 .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, moped.isArchive())
+                                .setInt(DatabaseConstants.VEHICLE_VERSION, moped.getVersion())
                                 .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, moped.getEngineDisplacement());
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + vehicle.getDiscriminator());
@@ -172,7 +173,8 @@ public class VehicleOperationsProvider {
                 row.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER),
                 row.getDouble(DatabaseConstants.VEHICLE_BASE_PRICE),
                 row.getBoolean(DatabaseConstants.VEHICLE_ARCHIVE),
-                row.getBoolean(DatabaseConstants.VEHICLE_RENTED)
+                row.getBoolean(DatabaseConstants.VEHICLE_RENTED),
+                row.getInt(DatabaseConstants.VEHICLE_VERSION)
         );
     }
 
@@ -186,7 +188,8 @@ public class VehicleOperationsProvider {
                 row.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER),
                 row.getDouble(DatabaseConstants.VEHICLE_BASE_PRICE),
                 row.getBoolean(DatabaseConstants.VEHICLE_ARCHIVE),
-                row.getBoolean(DatabaseConstants.VEHICLE_RENTED)
+                row.getBoolean(DatabaseConstants.VEHICLE_RENTED),
+                row.getInt(DatabaseConstants.VEHICLE_VERSION)
         );
     }
 
@@ -198,7 +201,8 @@ public class VehicleOperationsProvider {
                 row.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER),
                 row.getDouble(DatabaseConstants.VEHICLE_BASE_PRICE),
                 row.getBoolean(DatabaseConstants.VEHICLE_ARCHIVE),
-                row.getBoolean(DatabaseConstants.VEHICLE_RENTED)
+                row.getBoolean(DatabaseConstants.VEHICLE_RENTED),
+                row.getInt(DatabaseConstants.VEHICLE_VERSION)
         );
     }
 
@@ -212,7 +216,7 @@ public class VehicleOperationsProvider {
     }
 
 
-    public void update(Vehicle vehicle) {
+    public boolean update(Integer version, Vehicle vehicle) {
         List<Field> fields = new ArrayList<>();
         getAllFields(fields, vehicle.getClass());
 
@@ -223,7 +227,8 @@ public class VehicleOperationsProvider {
                         return field.get(vehicle)!=null
                                 && field.getAnnotation(PartitionKey.class)==null
                                 && field.getAnnotation(ClusteringColumn.class)==null
-                                && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_RENTED);
+                                && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_RENTED)
+                                && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_VERSION);
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
@@ -231,30 +236,67 @@ public class VehicleOperationsProvider {
         ).toList();
 
 
-
         try {
             Update update;
-            BatchStatement updates = BatchStatement.builder(BatchType.LOGGED).build();
-            List<SimpleStatement> updates1 = new ArrayList<>();
-            for (Field field : fields) {
-                field.setAccessible(true);
+            BatchStatementBuilder updates = BatchStatement.builder(BatchType.LOGGED);
+            for (int i = 0; i < fields.size(); i++) {
+                fields.get(i).setAccessible(true);
+
+                Object value = fields.get(i).get(vehicle);
+
+                // Manually convert custom types to CQL-compatible types using your codec
+                TransmissionTypeCodec transmissionTypeCodec = new TransmissionTypeCodec();
+                if (value instanceof Car.TransmissionType) {
+                    value = transmissionTypeCodec.format((Car.TransmissionType) value);
+                }
+
                 update = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
-                        .setColumn(field.getAnnotation(CqlName.class).value(), literal(field.get(vehicle)))
+                        .setColumn(fields.get(i).getAnnotation(CqlName.class).value(), literal(value))
+                        .setColumn(DatabaseConstants.VEHICLE_VERSION, literal(version + 1 + i))
                         .where(Relation.column(DatabaseConstants.ID)
                                 .isEqualTo(literal(vehicle.getId())))
                         .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
-                                .isEqualTo(literal(vehicle.getDiscriminator())));
-                updates.add(update.build());
-                updates1.add(update.build());
-                field.setAccessible(false);
+                                .isEqualTo(literal(vehicle.getDiscriminator())))
+                        .ifColumn(DatabaseConstants.VEHICLE_VERSION).isEqualTo(literal(version));
+
+                fields.get(i).setAccessible(false);
+                //todo remember to uncomment
+                updates.addStatement(update.build());
+                //System.out.println("batch update: " + update.build().getQuery());
             }
-            updates.addAll(updates1);
-            int size = updates.size(); //why is it zero?
-            int size1 = updates1.size();
-            session.execute(updates);
+
+            ResultSet resultSet = session.execute(updates.build());
+            return resultSet.wasApplied();
+
+            //System.out.println("Batch update applied: " + applied);
+
         } catch (IllegalAccessException e){
             throw new RuntimeException(e);
         }
-
     }
+
+    public boolean updateRented(Vehicle vehicle, boolean rented) {
+        Update update = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
+                .setColumn(DatabaseConstants.VEHICLE_RENTED, literal(rented))
+                .where(Relation.column(DatabaseConstants.ID)
+                        .isEqualTo(literal(vehicle.getId())))
+                .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
+                        .isEqualTo(literal(vehicle.getDiscriminator())))
+                .ifColumn(DatabaseConstants.VEHICLE_VERSION)
+                    .isEqualTo(literal(vehicle.getVersion()));
+
+        boolean result = session.execute(update.build()).wasApplied();
+        if (!result) {
+            return false;
+        }
+        Update incrementVersion = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
+                .setColumn(DatabaseConstants.VEHICLE_VERSION, literal(vehicle.getVersion() + 1))
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(vehicle.getId())))
+                .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
+                        .isEqualTo(literal(vehicle.getDiscriminator())));
+        session.execute(incrementVersion.build());
+        return true;
+    }
+
+
 }

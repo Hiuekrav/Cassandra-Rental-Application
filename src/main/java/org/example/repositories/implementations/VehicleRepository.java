@@ -6,7 +6,11 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.delete.Delete;
+import com.datastax.oss.driver.api.querybuilder.delete.DeleteSelection;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
+import com.datastax.oss.driver.api.querybuilder.truncate.Truncate;
+import lombok.Getter;
 import org.example.codecs.TransmissionTypeCodec;
 import org.example.dao.VehicleDao;
 import org.example.dao.VehicleMapperBuilder;
@@ -20,9 +24,11 @@ import org.example.utils.consts.DatabaseConstants;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.truncate;
 import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createKeyspace;
 
-
+@Getter
 public class VehicleRepository implements IVehicleRepository {
 
     private static final String TABLE_NAME = "vehicles";
@@ -81,6 +87,7 @@ public class VehicleRepository implements IVehicleRepository {
                 .withColumn(DatabaseConstants.BICYCLE_PEDAL_NUMBER, DataTypes.INT)
                 .withColumn(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, DataTypes.INT)
                 .withColumn(DatabaseConstants.CAR_TRANSMISSION_TYPE, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.VEHICLE_VERSION, DataTypes.INT)
                 .build();
 
         session.execute(createVehicleTable);
@@ -102,13 +109,9 @@ public class VehicleRepository implements IVehicleRepository {
                 .build();
         session.execute(createUniqueIndexTable);
 
+        // Nie panikuj, intellij nie wykrywa tej wygenerowanej klasy z folderu target, ale działa!
         vehicleDao = new VehicleMapperBuilder(this.session).build().getVehicleDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
                 DatabaseConstants.VEHICLE_TABLE);
-    }
-
-    public void create(Vehicle vehicle) {
-        //todo method just for tests, update and create will be combined into save() method
-        vehicleDao.create(vehicle);
     }
 
 
@@ -154,7 +157,7 @@ public class VehicleRepository implements IVehicleRepository {
         if (foundVehicle == null) {
             vehicleDao.create(obj);
         } else {
-            vehicleDao.update(obj);
+            vehicleDao.update(foundVehicle.getVersion(), obj);
         }
         return findById(obj.getId());
     }
@@ -167,21 +170,18 @@ public class VehicleRepository implements IVehicleRepository {
 
     @Override
     public Vehicle changeRentedStatus(UUID id, Boolean status) {
-        //todo implement
-        return null;
+        Vehicle foundVehicle = vehicleDao.findById(id);
+        if (!vehicleDao.updateRented(foundVehicle, status)) {
+            throw new RuntimeException("Optimistic Lock Exception while updating vehicle with ID: " + foundVehicle.getId());
+        }
+        return findById(id);
     }
 
     @Override
     public void deleteAll() {
-        SimpleStatement dropVehicles = SchemaBuilder
-                .dropTable(DatabaseConstants.VEHICLE_TABLE)
-                .ifExists()
-                .build();
-        SimpleStatement dropPlateNumberIndex = SchemaBuilder
-                .dropTable(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE)
-                .ifExists()
-                .build();
-        session.execute(dropVehicles);
-        session.execute(dropPlateNumberIndex);
+        Truncate truncateVehicles = truncate(DatabaseConstants.VEHICLE_TABLE);
+        Truncate truncateIndexes = truncate(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE);
+        session.execute(truncateVehicles.build());
+        session.execute(truncateIndexes.build());
     }
 }

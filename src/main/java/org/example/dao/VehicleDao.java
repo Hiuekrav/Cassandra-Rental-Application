@@ -46,7 +46,12 @@ public interface VehicleDao {
     @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
-    void update(Vehicle vehicle);
+    boolean update(Integer version, Vehicle vehicle);
+
+    @StatementAttributes(consistencyLevel = "QUORUM")
+    @QueryProvider(providerClass = VehicleOperationsProvider.class,
+            entityHelpers = {Bicycle.class, Car.class, Moped.class})
+    boolean updateRented(Vehicle vehicle, boolean rented);
 
     @Delete
     void remove(Vehicle vehicle);

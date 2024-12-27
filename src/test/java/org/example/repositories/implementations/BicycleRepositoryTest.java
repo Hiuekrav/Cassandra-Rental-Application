@@ -4,6 +4,7 @@ import org.example.model.vehicle.Bicycle;
 import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.utils.consts.DatabaseConstants;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,15 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class BicycleRepositoryTest {
 
-    private IVehicleRepository vehicleRepository;
-
+    private final IVehicleRepository vehicleRepository = new VehicleRepository();
 
     @BeforeEach
-    void setUp() {
-        vehicleRepository = new VehicleRepository();
-    }
-
-    @AfterEach
     void dropDatabase() {
         vehicleRepository.deleteAll();
     }
