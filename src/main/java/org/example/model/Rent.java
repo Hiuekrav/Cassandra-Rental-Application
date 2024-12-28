@@ -1,15 +1,10 @@
 package org.example.model;
 
-import com.datastax.oss.driver.api.mapper.annotations.CqlName;
-import com.datastax.oss.driver.api.mapper.annotations.Entity;
-import com.datastax.oss.driver.api.mapper.annotations.NamingStrategy;
-import com.datastax.oss.driver.api.mapper.annotations.PropertyStrategy;
-import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.example.model.clientType.ClientType;
 import org.example.model.vehicle.Vehicle;
-import org.example.utils.consts.DatabaseConstants;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -37,21 +32,21 @@ public class Rent extends AbstractEntity {
         this.client = client;
         this.vehicle = vehicle;
         this.active = active;
-        this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientType().getDiscount();
+        this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice();
     }
 
-    public void recalculateRentCost() {
-        this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientType().getDiscount();
-    }
+    //public void recalculateRentCost() {
+    //    this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientTypeId().getDiscount();
+    //}
 
 
-    public Rent(UUID id, LocalDateTime endTime, Client client, Vehicle vehicle) {
-        super(id);
-        this.beginTime = LocalDateTime.now();
-        this.endTime = endTime;
-        this.client = client;
-        this.vehicle = vehicle;
-        this.active = true;
-        this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientType().getDiscount();
-    }
+    //public Rent(UUID id, LocalDateTime endTime, Client client, Vehicle vehicle) {
+    //    super(id);
+    //    this.beginTime = LocalDateTime.now();
+    //    this.endTime = endTime;
+    //    this.client = client;
+    //    this.vehicle = vehicle;
+    //    this.active = true;
+    //    this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientTypeId().getDiscount();
+    //}
 }

@@ -45,13 +45,13 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
         getSession().execute(createVehicleTable);
 
         // Create index table for plate_number, to guarantee its uniqueness
-        SimpleStatement createUniqueIndexTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+        SimpleStatement createPlateNumberTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.VEHICLE_PLATE_NUMBER, DataTypes.TEXT)
                 .withColumn(DatabaseConstants.ID, DataTypes.UUID)
                 .build();
 
-        getSession().execute(createUniqueIndexTable);
+        getSession().execute(createPlateNumberTable);
 
         //todo create separate table for better performance?
         SimpleStatement createDiscriminatorIndex = SchemaBuilder.createIndex(DatabaseConstants.VEHICLE_DISCRIMINATOR_INDEX)

@@ -8,11 +8,8 @@ import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.example.model.clientType.ClientType;
 import org.example.utils.consts.DatabaseConstants;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
@@ -32,8 +29,8 @@ public class Client extends AbstractEntity {
     @CqlName(DatabaseConstants.CLIENT_EMAIL)
     private String email;
 
-    @CqlName(DatabaseConstants.CLIENT_CLIENT_TYPE_ID)
-    private UUID clientType;
+    @CqlName(DatabaseConstants.CLIENT_CLIENT_TYPE_ID_FK)
+    private UUID clientTypeId;
 
     @CqlName(DatabaseConstants.CLIENT_CITY_NAME)
     private String cityName;
@@ -44,8 +41,11 @@ public class Client extends AbstractEntity {
     @CqlName(DatabaseConstants.CLIENT_STREET_NUMBER)
     private String streetNumber;
 
+    @CqlName(DatabaseConstants.CLIENT_CURRENT_RENTS)
+    private Integer currentRents;
+
     public Client(UUID id, String firstName, String lastName, String email,
-                  UUID clientType, String cityName, String streetName, String streetNumber) {
+                  UUID clientTypeId, String cityName, String streetName, String streetNumber) {
         super(id);
         this.firstName = firstName;
         this.lastName = lastName;
@@ -53,7 +53,21 @@ public class Client extends AbstractEntity {
         this.cityName = cityName;
         this.streetName = streetName;
         this.streetNumber = streetNumber;
-        this.clientType = clientType;
+        this.clientTypeId = clientTypeId;
+        this.currentRents = 0;
+    }
+
+    public Client(UUID id, String firstName, String lastName, String email,
+                  UUID clientTypeId, String cityName, String streetName, String streetNumber, Integer currentRents) {
+        super(id);
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.cityName = cityName;
+        this.streetName = streetName;
+        this.streetNumber = streetNumber;
+        this.clientTypeId = clientTypeId;
+        this.currentRents = currentRents;
     }
 
 }

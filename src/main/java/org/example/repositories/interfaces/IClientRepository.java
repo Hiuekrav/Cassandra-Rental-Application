@@ -2,6 +2,7 @@ package org.example.repositories.interfaces;
 
 
 import org.example.model.Client;
+import org.example.model.clientType.ClientType;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,7 +11,13 @@ import java.util.UUID;
 public interface IClientRepository extends IObjectRepository<Client> {
     Client findByEmail(String email);
 
-    Client increaseActiveRents(UUID id, Integer number);
+    void increaseActiveRents(UUID id, int maxRents);
 
-    List<Client> findByType(Class<?> type);
+    void decreaseActiveRents(UUID id, int maxRents);
+
+    List<UUID> findByType(String type);
+
+    List<Client> findAll();
+
+    void changeClientType(UUID id, ClientType type);
 }

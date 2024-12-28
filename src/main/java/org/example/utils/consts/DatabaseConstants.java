@@ -62,13 +62,12 @@ public class DatabaseConstants {
 
     public static final String CLIENT_LAST_NAME = "last_name";
     public static final String CLIENT_EMAIL = "email";
-    public static final String CLIENT_ACTIVE_RENTS = "active_rents";
 
     public static final String CLIENT_CITY_NAME = "city_name";
     public static final String CLIENT_STREET_NAME = "street_name";
     public static final String CLIENT_STREET_NUMBER = "street_number";
 
-    public static final String CLIENT_CLIENT_TYPE_ID = "client_type_id";
+    public static final String CLIENT_CLIENT_TYPE_ID_FK = "client_type_id_fk";
 
 
     // Rent
