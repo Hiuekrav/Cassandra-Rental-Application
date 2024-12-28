@@ -114,14 +114,24 @@ public class ClientOperationsProvider {
     public boolean increaseCurrentRentsNumber(UUID id, int number, int maxRents) {
         // increase the counter only if its value is lesser than max rents,
         // decrease only if it is greater or equal zero
-        SimpleStatement increaseNumber = QueryBuilder
-                .update(DatabaseConstants.CLIENT_TABLE)
-                .increment(DatabaseConstants.CLIENT_CURRENT_RENTS, literal(number))
-                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(id)))
-                .ifColumn(DatabaseConstants.CLIENT_CURRENT_RENTS).isLessThan(literal(maxRents))
-                .ifColumn(DatabaseConstants.CLIENT_CURRENT_RENTS).isGreaterThanOrEqualTo(literal(0))
-                .build();
-        return session.execute(increaseNumber).wasApplied();
+        SimpleStatement changeNumber;
+        if (number > 0) {
+            changeNumber = QueryBuilder
+                    .update(DatabaseConstants.CLIENT_TABLE)
+                    .increment(DatabaseConstants.CLIENT_CURRENT_RENTS, literal(number))
+                    .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(id)))
+                    .ifColumn(DatabaseConstants.CLIENT_CURRENT_RENTS).isLessThan(literal(maxRents))
+                    .build();
+        }
+        else {
+            changeNumber = QueryBuilder
+                    .update(DatabaseConstants.CLIENT_TABLE)
+                    .increment(DatabaseConstants.CLIENT_CURRENT_RENTS, literal(number))
+                    .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(id)))
+                    .ifColumn(DatabaseConstants.CLIENT_CURRENT_RENTS).isGreaterThan(literal(0))
+                    .build();
+        }
+        return session.execute(changeNumber).wasApplied();
     }
 
     public boolean changeClientEmail(Client client, String newEmail) {

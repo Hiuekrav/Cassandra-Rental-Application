@@ -154,6 +154,21 @@ class ClientRepositoryTest {
     }
 
     @Test
+    void decreaseActiveRents_RentsNumberNegative() {
+        Gold gold = new Gold(UUID.randomUUID(), 20.0, 10);
+        clientTypeRepository.save(gold);
+        Client clientG = new Client(UUID.randomUUID(), "Jan", "Leszcz",
+                "c@org.com",gold.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(clientG);
+        assertEquals(0, clientRepository.findById(clientG.getId()).getCurrentRents());
+        clientRepository.increaseActiveRents(clientG.getId(), 1);
+        assertEquals(1, clientRepository.findById(clientG.getId()).getCurrentRents());
+        clientRepository.decreaseActiveRents(clientG.getId(), 1);
+        assertEquals(0, clientRepository.findById(clientG.getId()).getCurrentRents());
+        assertThrows(RuntimeException.class, ()-> clientRepository.decreaseActiveRents(clientG.getId(), 1));
+    }
+
+    @Test
     void findByType() {
         Silver silver = new Silver(UUID.randomUUID(), 12.0, 5);
         clientTypeRepository.save(silver);
