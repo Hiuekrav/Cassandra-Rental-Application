@@ -1,17 +1,11 @@
 package org.example.repositories.implementations;
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
-import com.datastax.oss.driver.api.querybuilder.delete.Delete;
-import com.datastax.oss.driver.api.querybuilder.delete.DeleteSelection;
-import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
 import com.datastax.oss.driver.api.querybuilder.truncate.Truncate;
 import lombok.Getter;
-import org.example.codecs.TransmissionTypeCodec;
 import org.example.dao.VehicleDao;
 import org.example.dao.VehicleMapperBuilder;
 import org.example.model.vehicle.Bicycle;
@@ -21,7 +15,6 @@ import org.example.model.vehicle.Vehicle;
 import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.utils.consts.DatabaseConstants;
 
-import java.net.InetSocketAddress;
 import java.util.*;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
@@ -29,53 +22,12 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.truncate;
 import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createKeyspace;
 
 @Getter
-public class VehicleRepository implements IVehicleRepository {
-
-    private static final String TABLE_NAME = "vehicles";
-
-    private static final String TABLE_NAME_BY_TITLE = TABLE_NAME + "ByPlateNumber";
-
-
+public class VehicleRepository extends ObjectRepository implements IVehicleRepository {
 
    private final VehicleDao vehicleDao;
 
-    private CqlSession session;
-
-
     public VehicleRepository() {
-
-        this.session = CqlSession.builder( )
-                .addContactPoint(new InetSocketAddress("cassandra1", 9042))
-                .addContactPoint(new InetSocketAddress("cassandra2", 9043))
-                .withLocalDatacenter("dc1")
-                .withAuthCredentials("cassandra", "cassandrapassword")
-                .build();
-
-        //todo fix timeout error while dropping the keyspace
-        // Drop keyspace if exists
-        //SimpleStatement dropKeyspaceStatement = SchemaBuilder
-        //        .dropKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
-        //        .ifExists()
-        //        .build();
-        //session.execute(dropKeyspaceStatement);
-
-        CreateKeyspace keyspace = createKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
-                .ifNotExists()
-                .withSimpleStrategy(2)
-                .withDurableWrites(true);
-        SimpleStatement createKeyspace = keyspace.build();
-        session.execute(createKeyspace);
-        session.close();
-
-        this.session = CqlSession.builder( )
-                .addContactPoint(new InetSocketAddress("cassandra1", 9042))
-                .addContactPoint(new InetSocketAddress("cassandra2", 9043))
-                .withLocalDatacenter("dc1")
-                .withAuthCredentials("cassandra", "cassandrapassword")
-                .withKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
-                .addTypeCodecs(new TransmissionTypeCodec())
-                .build();
-
+        super();
         SimpleStatement createVehicleTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.ID, DataTypes.UUID)
@@ -90,27 +42,36 @@ public class VehicleRepository implements IVehicleRepository {
                 .withColumn(DatabaseConstants.VEHICLE_VERSION, DataTypes.INT)
                 .build();
 
-        session.execute(createVehicleTable);
-
-        // Create index to enable searching by plate number
-        SimpleStatement createIndex = SchemaBuilder.createIndex(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX)
-                .ifNotExists()
-                .onTable(DatabaseConstants.VEHICLE_TABLE)
-                .andColumn(DatabaseConstants.VEHICLE_PLATE_NUMBER)
-                .build();
-
-        session.execute(createIndex);
+        getSession().execute(createVehicleTable);
 
         // Create index table for plate_number, to guarantee its uniqueness
-        SimpleStatement createUniqueIndexTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE)
+        SimpleStatement createUniqueIndexTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .ifNotExists()
-                .withPartitionKey("plate_number", DataTypes.TEXT)
-                .withColumn("id", DataTypes.UUID)
+                .withPartitionKey(DatabaseConstants.VEHICLE_PLATE_NUMBER, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.ID, DataTypes.UUID)
                 .build();
-        session.execute(createUniqueIndexTable);
+
+        getSession().execute(createUniqueIndexTable);
+
+        //todo create separate table for better performance?
+        SimpleStatement createDiscriminatorIndex = SchemaBuilder.createIndex(DatabaseConstants.VEHICLE_DISCRIMINATOR_INDEX)
+                .ifNotExists()
+                .onTable(DatabaseConstants.VEHICLE_TABLE)
+                .andColumn(DatabaseConstants.VEHICLE_DISCRIMINATOR)
+                .build();
+
+        getSession().execute(createDiscriminatorIndex);
+
+        //SimpleStatement createDiscriminatorTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_BY_DISCRIMINATOR_TABLE)
+        //        .ifNotExists()
+        //        .withPartitionKey(DatabaseConstants.VEHICLE_DISCRIMINATOR, DataTypes.TEXT)
+        //        .withClusteringColumn(DatabaseConstants.ID, DataTypes.UUID)
+        //        .build();
+        //
+        //getSession().execute(createDiscriminatorTable);
 
         // Nie panikuj, intellij nie wykrywa tej wygenerowanej klasy z folderu target, ale działa!
-        vehicleDao = new VehicleMapperBuilder(this.session).build().getVehicleDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
+        vehicleDao = new VehicleMapperBuilder(getSession()).build().getVehicleDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
                 DatabaseConstants.VEHICLE_TABLE);
     }
 
@@ -165,7 +126,7 @@ public class VehicleRepository implements IVehicleRepository {
     @Override
     public void deleteById(UUID id) {
         Vehicle foundVehicle = vehicleDao.findById(id);
-        vehicleDao.remove(foundVehicle);
+        vehicleDao.delete(foundVehicle);
     }
 
     @Override
@@ -180,8 +141,8 @@ public class VehicleRepository implements IVehicleRepository {
     @Override
     public void deleteAll() {
         Truncate truncateVehicles = truncate(DatabaseConstants.VEHICLE_TABLE);
-        Truncate truncateIndexes = truncate(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE);
-        session.execute(truncateVehicles.build());
-        session.execute(truncateIndexes.build());
+        Truncate truncateIndexes = truncate(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE);
+        getSession().execute(truncateVehicles.build());
+        getSession().execute(truncateIndexes.build());
     }
 }

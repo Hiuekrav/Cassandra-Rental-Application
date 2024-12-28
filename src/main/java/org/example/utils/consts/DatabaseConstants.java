@@ -15,8 +15,9 @@ public class DatabaseConstants {
     public static final String VEHICLE_RENTED = "rented";
     public static final String VEHICLE_DISCRIMINATOR = "discriminator";
     public static final String VEHICLE_VERSION = "version";
-    public static final String VEHICLE_PLATE_NUMBER_INDEX = "vehicle_plate_number_idx";
-    public static final String VEHICLE_PLATE_NUMBER_INDEX_TABLE = "vehicle_plate_number_index_table";
+    public static final String VEHICLE_BY_PLATE_NUMBER_TABLE = "vehicle_by_plate_number";
+    public static final String VEHICLE_BY_DISCRIMINATOR_TABLE = "vehicle_by_discriminator_table";
+    public static final String VEHICLE_DISCRIMINATOR_INDEX = "vehicle_discriminator_idx";
 
     // MotorVehicle
     public static final String MOTOR_VEHICLE_ENGINE_DISPLACEMENT = "engine_displacement";
@@ -38,11 +39,12 @@ public class DatabaseConstants {
 
     // ClientType
 
-    public static final String CLIENT_TYPE_DISCRIMINATOR = "client_type";
+    public static final String CLIENT_TYPE_TABLE = "client_type";
+    public static final String CLIENT_TYPE_DISCRIMINATOR = "discriminator";
 
-    public static final String DEFAULT_DISCRIMINATOR = "default";
-    public static final String SILVER_DISCRIMINATOR = "silver";
-    public static final String GOLD_DISCRIMINATOR = "gold";
+    public static final String CLIENT_TYPE_DEFAULT_DISCRIMINATOR = "default";
+    public static final String CLIENT_TYPE_SILVER_DISCRIMINATOR = "silver";
+    public static final String CLIENT_TYPE_GOLD_DISCRIMINATOR = "gold";
 
 
     public static final String CLIENT_TYPE_DISCOUNT = "discount";
@@ -52,6 +54,10 @@ public class DatabaseConstants {
     // Client
 
     public static final String CLIENT_TABLE = "client";
+    public static final String CLIENT_BY_EMAIL_TABLE = "client_by_email";
+    public static final String CLIENT_BY_CLIENT_TYPE_TABLE = "client_by_client_type";
+    public static final String CLIENT_CURRENT_RENTS_TABLE = "client_current_rents";
+    public static final String CLIENT_CURRENT_RENTS = "current_rents";
     public static final String CLIENT_FIRST_NAME = "first_name";
 
     public static final String CLIENT_LAST_NAME = "last_name";
@@ -81,6 +87,6 @@ public class DatabaseConstants {
     public static final String VEHICLE_COLLECTION_NAME = "vehicles";
     public static final String RENT_ACTIVE_COLLECTION_NAME = "active_rents";
     public static final String RENT_ARCHIVE_COLLECTION_NAME = "archive_rents";
-    public static final String CLIENT_TYPE_COLLECTION_NAME = "client_types";
+
     
 }

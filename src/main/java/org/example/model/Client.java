@@ -15,24 +15,37 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-//@Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
-//@CqlName(DatabaseConstants.CLIENT_TABLE)
-//@PropertyStrategy(mutable = false)
-//@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
+@Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
+@CqlName(DatabaseConstants.CLIENT_TABLE)
+@PropertyStrategy(mutable = false)
+@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 @SuperBuilder(toBuilder = true)
 @Getter @Setter
 public class Client extends AbstractEntity {
 
+    @CqlName(DatabaseConstants.CLIENT_FIRST_NAME)
     private String firstName;
+
+    @CqlName(DatabaseConstants.CLIENT_LAST_NAME)
     private String lastName;
+
+    @CqlName(DatabaseConstants.CLIENT_EMAIL)
     private String email;
-    private ClientType clientType;
+
+    @CqlName(DatabaseConstants.CLIENT_CLIENT_TYPE_ID)
+    private UUID clientType;
+
+    @CqlName(DatabaseConstants.CLIENT_CITY_NAME)
     private String cityName;
+
+    @CqlName(DatabaseConstants.CLIENT_STREET_NAME)
     private String streetName;
+
+    @CqlName(DatabaseConstants.CLIENT_STREET_NUMBER)
     private String streetNumber;
 
     public Client(UUID id, String firstName, String lastName, String email,
-                  ClientType clientType, String cityName, String streetName, String streetNumber) {
+                  UUID clientType, String cityName, String streetName, String streetNumber) {
         super(id);
         this.firstName = firstName;
         this.lastName = lastName;

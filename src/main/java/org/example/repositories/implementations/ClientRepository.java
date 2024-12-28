@@ -1,112 +1,107 @@
 package org.example.repositories.implementations;
-//
-//public class ClientRepository extends ObjectRepository<ClientMgd> implements IClientRepository {
-//
-//
-//    public ClientRepository(MongoClient client,
-//                            Class<ClientMgd> mgdClass) {
-//        super(client, mgdClass);
-//
-//        boolean collectionExist = getDatabase().listCollectionNames()
-//                .into(new ArrayList<>()).contains(DatabaseConstants.CLIENT_COLLECTION_NAME);
-//
-//        if (!collectionExist) {
-//            ValidationOptions validationOptions = new ValidationOptions().validator(
-//                    Document.parse(
-//                            """
-//                                    {
-//                                        $jsonSchema: {
-//                                            "bsonType": "object",
-//                                            "required": ["_id"]
-//                                            "properties": {
-//                                                "activeRents" : {
-//                                                    "bsonType" : "int",
-//                                                    "minimum" : 0
-//                                                }
-//                                            }
-//                                        }
-//                                    }
-//                                 """
-//                    )
-//            );
-//            CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions()
-//                    .validationOptions(validationOptions);
-//            super.getDatabase().createCollection(DatabaseConstants.CLIENT_COLLECTION_NAME, createCollectionOptions);
-//
-//            Bson emailIndex = new BasicDBObject(DatabaseConstants.CLIENT_EMAIL, 1);
-//            IndexOptions indexOptions = new IndexOptions().unique(true);
-//            super.getDatabase().getCollection(DatabaseConstants.CLIENT_COLLECTION_NAME)
-//                    .createIndex(emailIndex, indexOptions);
-//        }
-//    }
-//
-//
-//    @Override
-//    public ClientMgd findByEmail(String email) {
-//        ClientSession clientSession = this.getClient().startSession();
-//        try {
-//            MongoCollection<ClientMgd> clients = super.getDatabase()
-//                    .getCollection(DatabaseConstants.CLIENT_COLLECTION_NAME, DatabaseConstants.CLIENT_COLLECTION_TYPE);
-//            Bson emailFilter = Filters.eq(DatabaseConstants.CLIENT_EMAIL, email);
-//            ClientMgd foundClient = clients.find(emailFilter).first();
-//
-//            if (foundClient == null) {
-//                throw  new RuntimeException("Client with provided email could not be found!!!");
-//            }
-//            return foundClient;
-//
-//        } catch (MongoCommandException e) {
-//            clientSession.close();
-//            throw new RuntimeException("MongoCommandException!");
-//        }
-//    }
-//
-//    private String getDiscriminatorForClass(Class<?> mgdClass) {
-//        if (mgdClass.equals(DefaultMgd.class)) {
-//            return DatabaseConstants.DEFAULT_DISCRIMINATOR;
-//        }
-//        else if (mgdClass.equals(SilverMgd.class)) {
-//            return DatabaseConstants.SILVER_DISCRIMINATOR;
-//        }
-//        else if (mgdClass.equals(GoldMgd.class)) {
-//            return DatabaseConstants.GOLD_DISCRIMINATOR;
-//        }
-//        else {
-//            throw new RuntimeException("Unknown client type: " + mgdClass.getSimpleName());
-//        }
-//    }
-//
-//    @Override
-//    public ClientMgd increaseActiveRents(UUID id, Integer number) {
-//        MongoCollection<ClientMgd> clientCollection = super.getDatabase().getCollection(DatabaseConstants.CLIENT_COLLECTION_NAME,
-//                getModelClass());
-//        Bson idFilter = Filters.eq(DatabaseConstants.ID, id);
-//        Bson bothFilters = Filters.and(idFilter);
-//        ClientMgd foundClient = clientCollection.find(bothFilters).first();
-//        if (foundClient == null) {
-//            throw new RuntimeException("Client with provided id was not found!!!");
-//        }
-//        Bson updateOperation;
-//        updateOperation = Updates.inc(DatabaseConstants.CLIENT_ACTIVE_RENTS, number);
-//        clientCollection.updateOne(bothFilters, updateOperation);
-//        return clientCollection.find(bothFilters).first();
-//    }
-//
-//    @Override
-//    public List<ClientMgd> findByType(Class<?> type) {
-//        String discriminatorValue = getDiscriminatorForClass(type);
-//        MongoCollection<ClientTypeMgd> clientTypeMgdCollection = super.getDatabase()
-//                .getCollection(DatabaseConstants.CLIENT_TYPE_COLLECTION_NAME, ClientTypeMgd.class);
-//        Bson typeFilter = Filters.eq(DatabaseConstants.BSON_DISCRIMINATOR_KEY, discriminatorValue);
-//        ClientTypeMgd foundClientType = clientTypeMgdCollection.find(typeFilter).first();
-//
-//        if (foundClientType == null) {
-//            throw new RuntimeException("ClientType" +type.getSimpleName() + " was not found!!!");
-//        }
-//
-//        MongoCollection<ClientMgd> clientMgdCollection = super.getDatabase()
-//                .getCollection(DatabaseConstants.CLIENT_COLLECTION_NAME, ClientMgd.class);
-//        Bson idFilter = Filters.eq(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, foundClientType.getId());
-//        return clientMgdCollection.find(idFilter).into(new ArrayList<>());
-//    }
-//}
+
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.type.DataType;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import org.example.dao.ClientDao;
+import org.example.dao.ClientMapper;
+import org.example.model.Client;
+import org.example.repositories.interfaces.IClientRepository;
+import org.example.utils.consts.DatabaseConstants;
+
+import java.util.List;
+import java.util.UUID;
+
+public class ClientRepository extends ObjectRepository implements IClientRepository {
+
+    ClientDao clientDao;
+
+
+    public ClientRepository() {
+        super();
+
+        SimpleStatement createTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_TABLE)
+                .ifNotExists()
+                .withPartitionKey(DatabaseConstants.ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.CLIENT_EMAIL, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_FIRST_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_LAST_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_CITY_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_STREET_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_STREET_NUMBER, DataTypes.TEXT)
+                .build();
+
+        getSession().execute(createTable);
+
+        SimpleStatement createEmailTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_BY_EMAIL_TABLE)
+                .ifNotExists()
+                .withPartitionKey(DatabaseConstants.CLIENT_EMAIL, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .build();
+
+        getSession().execute(createEmailTable);
+
+        SimpleStatement createClientTypeTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
+                .withPartitionKey(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR, DataTypes.TEXT)
+                .withClusteringColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .build();
+
+        getSession().execute(createClientTypeTable);
+
+        SimpleStatement createCurrentRentsTable = SchemaBuilder
+                .createTable(DatabaseConstants.CLIENT_CURRENT_RENTS_TABLE)
+                .withPartitionKey(DatabaseConstants.ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.CLIENT_CURRENT_RENTS, DataTypes.COUNTER)
+                .build();
+
+        getSession().execute(createCurrentRentsTable);
+
+        clientDao = new ClientMapperBuilder(getSession()).build().getVehicleDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
+                DatabaseConstants.CLIENT_TABLE);
+    }
+
+    @Override
+    public Client findByEmail(String email) {
+        return null;
+
+    }
+
+    @Override
+    public Client increaseActiveRents(UUID id, Integer number) {
+       return null;
+    }
+
+    @Override
+    public List<Client> findByType(Class<?> type) {
+       return null;
+    }
+
+    @Override
+    public Client findById(UUID id) {
+        return null;
+    }
+
+    @Override
+    public Client findByIdOrNull(UUID id) {
+        return null;
+    }
+
+    @Override
+    public Client save(Client obj) {
+        return null;
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        return;
+
+    }
+
+    @Override
+    public void deleteAll() {
+        return;
+
+    }
+}

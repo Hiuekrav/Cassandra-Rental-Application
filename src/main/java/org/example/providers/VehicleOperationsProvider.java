@@ -40,7 +40,7 @@ public class VehicleOperationsProvider {
 
     public void create(Vehicle vehicle) {
 
-        SimpleStatement insertPlateNumber = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_PLATE_NUMBER_INDEX_TABLE)
+        SimpleStatement insertPlateNumber = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(vehicle.getPlateNumber()))
                 .value(DatabaseConstants.ID, literal(vehicle.getId()))
                 .ifNotExists()
@@ -115,20 +115,24 @@ public class VehicleOperationsProvider {
     }
 
     public Vehicle findByPlateNumber(String plateNumber) {
-        Select findVehicle = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
+        Select findPlateNumber = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE))
                 .all().where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(plateNumber)));
 
-        Row row = session.execute(findVehicle.build()).one();
+        Row plateNumberRow = session.execute(findPlateNumber.build()).one();
 
-        if (row == null) {
+        if (plateNumberRow == null) {
             throw new RuntimeException("Could not find vehicle with plate number: " + plateNumber);
         }
+        Select findVehicle = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
+                .all().where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER)
+                        .isEqualTo(literal(plateNumberRow.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER))));
 
-        String discriminator = row.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR);
+        Row vehicleRow = session.execute(findVehicle.build()).one();
+        String discriminator = vehicleRow.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR);
         return switch (discriminator) {
-            case DatabaseConstants.BICYCLE_DISCRIMINATOR -> getBicycle(row);
-            case DatabaseConstants.CAR_DISCRIMINATOR -> getCar(row);
-            case DatabaseConstants.MOPED_DISCRIMINATOR -> getMoped(row);
+            case DatabaseConstants.BICYCLE_DISCRIMINATOR -> getBicycle(vehicleRow);
+            case DatabaseConstants.CAR_DISCRIMINATOR -> getCar(vehicleRow);
+            case DatabaseConstants.MOPED_DISCRIMINATOR -> getMoped(vehicleRow);
             default -> throw new IllegalArgumentException("Invalid discriminator: " + discriminator);
         };
     }
@@ -138,10 +142,9 @@ public class VehicleOperationsProvider {
         Select findVehicles = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
                 .all()
                 .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
-                .isEqualTo(literal(DatabaseConstants.CAR_DISCRIMINATOR)))
-                .allowFiltering();
+                .isEqualTo(literal(DatabaseConstants.CAR_DISCRIMINATOR)));
         /* acceptable use case of allowFiltering as it scans only single node instead of all nodes,
-         because of searching by clustering column */
+         because of searching by clustering column: https://www.baeldung.com/cassandra-secondary-indexes */
         List<Row> rows = session.execute(findVehicles.build()).all();
         return rows.stream().map(this::getCar).toList();
     }
@@ -149,8 +152,7 @@ public class VehicleOperationsProvider {
     public List<Bicycle> findAllBicycles() {
         Select findVehicles = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
                 .all().where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
-                        .isEqualTo(literal(DatabaseConstants.BICYCLE_DISCRIMINATOR)))
-                .allowFiltering();
+                        .isEqualTo(literal(DatabaseConstants.BICYCLE_DISCRIMINATOR)));
         List<Row> rows = session.execute(findVehicles.build()).all();
         return rows.stream().map(this::getBicycle).toList();
     }
@@ -158,8 +160,7 @@ public class VehicleOperationsProvider {
     public List<Moped> findAllMoped() {
         Select findVehicles = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
                 .all().where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
-                .isEqualTo(literal(DatabaseConstants.MOPED_DISCRIMINATOR)))
-                .allowFiltering();
+                .isEqualTo(literal(DatabaseConstants.MOPED_DISCRIMINATOR)));
         List<Row> rows = session.execute(findVehicles.build()).all();
         return rows.stream().map(this::getMoped).toList();
     }
