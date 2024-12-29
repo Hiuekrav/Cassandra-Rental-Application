@@ -22,5 +22,5 @@ public interface IRentRepository extends IObjectRepository<Rent> {
 
     List<Rent> findAll();
 
-    void moveRentToArchived(UUID rentId);
+    void endRent(UUID rentId);
 }

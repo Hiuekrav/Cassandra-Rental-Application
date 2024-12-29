@@ -32,7 +32,7 @@ public class ClientOperationsProvider {
                 row.getString(DatabaseConstants.CLIENT_FIRST_NAME),
                 row.getString(DatabaseConstants.CLIENT_LAST_NAME),
                 row.getString(DatabaseConstants.CLIENT_EMAIL),
-                row.getUuid(DatabaseConstants.CLIENT_CLIENT_TYPE_ID_FK),
+                row.getUuid(DatabaseConstants.CLIENT_CLIENT_TYPE_ID),
                 row.getString(DatabaseConstants.CLIENT_CITY_NAME),
                 row.getString(DatabaseConstants.CLIENT_STREET_NAME),
                 row.getString(DatabaseConstants.CLIENT_STREET_NUMBER),
@@ -60,7 +60,7 @@ public class ClientOperationsProvider {
                 .setString(DatabaseConstants.CLIENT_CITY_NAME, client.getCityName())
                 .setString(DatabaseConstants.CLIENT_STREET_NAME, client.getStreetName())
                 .setString(DatabaseConstants.CLIENT_STREET_NUMBER, client.getStreetNumber())
-                .setUuid(DatabaseConstants.CLIENT_CLIENT_TYPE_ID_FK, client.getClientTypeId())
+                .setUuid(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, client.getClientTypeId())
                 .setInt(DatabaseConstants.CLIENT_CURRENT_RENTS, client.getCurrentRents());
 
         // find client type of created client
@@ -163,7 +163,7 @@ public class ClientOperationsProvider {
 
         // update UUID of client type in the main client table
         SimpleStatement updateClientTypeId = QueryBuilder.update(DatabaseConstants.CLIENT_TABLE)
-                .setColumn(DatabaseConstants.CLIENT_CLIENT_TYPE_ID_FK, literal(newClientType.getId()))
+                .setColumn(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, literal(newClientType.getId()))
                 .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getId()))).build();
 
         SimpleStatement findOldType = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_TYPE_TABLE)

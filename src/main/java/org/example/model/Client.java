@@ -29,7 +29,7 @@ public class Client extends AbstractEntity {
     @CqlName(DatabaseConstants.CLIENT_EMAIL)
     private String email;
 
-    @CqlName(DatabaseConstants.CLIENT_CLIENT_TYPE_ID_FK)
+    @CqlName(DatabaseConstants.CLIENT_CLIENT_TYPE_ID)
     private UUID clientTypeId;
 
     @CqlName(DatabaseConstants.CLIENT_CITY_NAME)

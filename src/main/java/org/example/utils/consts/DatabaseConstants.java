@@ -67,25 +67,22 @@ public class DatabaseConstants {
     public static final String CLIENT_STREET_NAME = "street_name";
     public static final String CLIENT_STREET_NUMBER = "street_number";
 
-    public static final String CLIENT_CLIENT_TYPE_ID_FK = "client_type_id_fk";
+    public static final String CLIENT_CLIENT_TYPE_ID = "client_type_id";
 
 
     // Rent
 
     public static final String RENT_TABLE = "rent";
+    public static final String RENT_BY_CLIENT_TABLE = "rent_by_client";
+    public static final String RENT_BY_VEHICLE_TABLE = "rent_by_vehicle";
 
     public static final String RENT_BEGIN_TIME = "begin_time";
     public static final String RENT_END_TIME = "end_time";
 
     public static final String RENT_RENT_COST = "rent_cost";
-    public static final String RENT_CLIENT_ID = "client._id";
-    public static final String RENT_VEHICLE_ID = "vehicle._id";
+    public static final String RENT_CLIENT_ID = "client_id";
+    public static final String RENT_VEHICLE_ID = "vehicle_id";
 
-    //Collection names
-    public static final String CLIENT_COLLECTION_NAME = "clients";
-    public static final String VEHICLE_COLLECTION_NAME = "vehicles";
-    public static final String RENT_ACTIVE_COLLECTION_NAME = "active_rents";
-    public static final String RENT_ARCHIVE_COLLECTION_NAME = "archive_rents";
 
     
 }

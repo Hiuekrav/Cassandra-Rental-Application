@@ -1,25 +1,83 @@
 package org.example.repositories.implementations;
 
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.type.DataTypes;
+import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.datastax.oss.driver.api.querybuilder.truncate.Truncate;
+import org.example.dao.RentDao;
+import org.example.dao.RentMapper;
+import org.example.dao.RentMapperBuilder;
 import org.example.model.Rent;
 import org.example.repositories.interfaces.IRentRepository;
+import org.example.utils.consts.DatabaseConstants;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-public class RentRepository implements IRentRepository {
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.truncate;
+
+public class RentRepository extends ObjectRepository implements IRentRepository {
+
+    RentDao rentDao;
 
     public RentRepository() {
+        super();
 
+        SimpleStatement createRentsTable = SchemaBuilder
+                .createTable(DatabaseConstants.RENT_TABLE)
+                .ifNotExists()
+                .withPartitionKey(DatabaseConstants.ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.RENT_BEGIN_TIME, DataTypes.TIMESTAMP)
+                .withColumn(DatabaseConstants.RENT_END_TIME, DataTypes.TIMESTAMP)
+                .withColumn(DatabaseConstants.RENT_CLIENT_ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.RENT_VEHICLE_ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.RENT_RENT_COST, DataTypes.DOUBLE)
+                .build();
+
+        getSession().execute(createRentsTable);
+
+        SimpleStatement createRentByClientTable = SchemaBuilder
+                .createTable(DatabaseConstants.RENT_BY_CLIENT_TABLE)
+                .ifNotExists()
+                .withPartitionKey(DatabaseConstants.RENT_CLIENT_ID, DataTypes.UUID)
+                .withClusteringColumn(DatabaseConstants.RENT_END_TIME, DataTypes.TIMESTAMP)
+                .withColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.RENT_BEGIN_TIME, DataTypes.TIMESTAMP)
+                .withColumn(DatabaseConstants.RENT_VEHICLE_ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.RENT_RENT_COST, DataTypes.DOUBLE)
+                .build();
+
+        getSession().execute(createRentByClientTable);
+
+        SimpleStatement createRentByVehicleTable = SchemaBuilder
+                .createTable(DatabaseConstants.RENT_BY_VEHICLE_TABLE)
+                .ifNotExists()
+                .withPartitionKey(DatabaseConstants.RENT_VEHICLE_ID, DataTypes.UUID)
+                .withClusteringColumn(DatabaseConstants.RENT_END_TIME, DataTypes.TIMESTAMP)
+                .withColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.RENT_BEGIN_TIME, DataTypes.TIMESTAMP)
+                .withColumn(DatabaseConstants.RENT_CLIENT_ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.RENT_RENT_COST, DataTypes.DOUBLE)
+                .build();
+
+        getSession().execute(createRentByVehicleTable);
+        rentDao = new RentMapperBuilder(getSession()).build().getRentDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
+                DatabaseConstants.RENT_TABLE);
     }
 
     @Override
     public Rent findById(UUID id) {
-        return null;
+        Rent rent = rentDao.findById(id);
+        if (rent == null) {
+            throw new RuntimeException("Rent with id " + id + " not found");
+        }
+        return rent;
     }
 
     @Override
     public Rent findByIdOrNull(UUID id) {
-        return null;
+        return rentDao.findById(id);
     }
 
     @Override
@@ -29,21 +87,37 @@ public class RentRepository implements IRentRepository {
 
     @Override
     public Rent save(Rent obj) {
-        return null;
+        Rent foundRent = findByIdOrNull(obj.getId());
+        if (foundRent != null && !rentDao.update(foundRent.getId(), obj.getEndTime())) {
+            throw new RuntimeException("Rent with id " + obj.getId() + " already ended!");
+        } else {
+            rentDao.create(obj);
+        }
+        return findById(obj.getId());
     }
 
     @Override
     public void deleteById(UUID id) {
-
+        Rent foundRent = findById(id);
+        rentDao.delete(foundRent);
     }
 
     @Override
     public void deleteAll() {
+        Truncate truncateRents = truncate(DatabaseConstants.RENT_TABLE);
+        Truncate truncateClients = truncate(DatabaseConstants.RENT_BY_CLIENT_TABLE);
+        Truncate truncateVehicles = truncate(DatabaseConstants.RENT_BY_VEHICLE_TABLE);
+        getSession().execute(truncateRents.build());
+        getSession().execute(truncateClients.build());
+        getSession().execute(truncateVehicles.build());
 
     }
 
-    public void moveRentToArchived(UUID rentId) {
-        return;
+    public void endRent(UUID rentId) {
+        Rent foundRent = findById(rentId);
+        if (rentDao.update(foundRent.getId(), LocalDateTime.now())) {
+            throw new RuntimeException("Rent with id " + rentId + " already ended!");
+        }
     }
 
 
@@ -79,7 +153,7 @@ public class RentRepository implements IRentRepository {
 
     @Override
     public List<Rent> findAllActiveByVehicleId(UUID vehicleId) {
-        return null;
+        return rentDao.findAllActiveByVehicleId(vehicleId);
     }
 
     @Override

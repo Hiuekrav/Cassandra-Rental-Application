@@ -4,6 +4,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
 import lombok.Getter;
+import org.example.codecs.LocalDateTimeCodec;
 import org.example.codecs.TransmissionTypeCodec;
 import org.example.model.AbstractEntity;
 import org.example.repositories.interfaces.IObjectRepository;
@@ -44,6 +45,7 @@ public abstract class ObjectRepository {
                 .withAuthCredentials("cassandra", "cassandrapassword")
                 .withKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
                 .addTypeCodecs(new TransmissionTypeCodec())
+                .addTypeCodecs(new LocalDateTimeCodec())
                 .build();
     }
 }

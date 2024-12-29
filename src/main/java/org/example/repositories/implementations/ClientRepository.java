@@ -31,7 +31,7 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
                 .withColumn(DatabaseConstants.CLIENT_STREET_NAME, DataTypes.TEXT)
                 .withColumn(DatabaseConstants.CLIENT_STREET_NUMBER, DataTypes.TEXT)
                 .withColumn(DatabaseConstants.CLIENT_CURRENT_RENTS, DataTypes.INT)
-                .withColumn(DatabaseConstants.CLIENT_CLIENT_TYPE_ID_FK, DataTypes.UUID)
+                .withColumn(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, DataTypes.UUID)
                 .build();
 
         getSession().execute(createTable);
