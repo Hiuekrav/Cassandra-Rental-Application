@@ -12,8 +12,7 @@ public interface IClientRepository extends IObjectRepository<Client> {
     Client findByEmail(String email);
 
     void increaseActiveRents(UUID id, int maxRents);
-
-    void decreaseActiveRents(UUID id, int maxRents);
+    void decreaseActiveRents(UUID id);
 
     List<UUID> findByType(String type);
 

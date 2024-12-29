@@ -22,7 +22,7 @@ public interface IVehicleService extends IObjectService {
 
      Moped createMoped(MopedCreateDTO mopedCreateDTO);
 
-     Vehicle findByIdAndDiscriminator(UUID id, String discriminator);
+     Vehicle findById(UUID id);
 
      Vehicle findByPlateNumber(String plateNumber);
 

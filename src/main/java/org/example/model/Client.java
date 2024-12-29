@@ -41,8 +41,8 @@ public class Client extends AbstractEntity {
     @CqlName(DatabaseConstants.CLIENT_STREET_NUMBER)
     private String streetNumber;
 
-    @CqlName(DatabaseConstants.CLIENT_CURRENT_RENTS)
-    private Integer currentRents;
+    @CqlName(DatabaseConstants.CLIENT_ACTIVE_RENTS)
+    private Integer activeRents;
 
     public Client(UUID id, String firstName, String lastName, String email,
                   UUID clientTypeId, String cityName, String streetName, String streetNumber) {
@@ -54,11 +54,11 @@ public class Client extends AbstractEntity {
         this.streetName = streetName;
         this.streetNumber = streetNumber;
         this.clientTypeId = clientTypeId;
-        this.currentRents = 0;
+        this.activeRents = 0;
     }
 
     public Client(UUID id, String firstName, String lastName, String email,
-                  UUID clientTypeId, String cityName, String streetName, String streetNumber, Integer currentRents) {
+                  UUID clientTypeId, String cityName, String streetName, String streetNumber, Integer activeRents) {
         super(id);
         this.firstName = firstName;
         this.lastName = lastName;
@@ -67,7 +67,7 @@ public class Client extends AbstractEntity {
         this.streetName = streetName;
         this.streetNumber = streetNumber;
         this.clientTypeId = clientTypeId;
-        this.currentRents = currentRents;
+        this.activeRents = activeRents;
     }
 
 }

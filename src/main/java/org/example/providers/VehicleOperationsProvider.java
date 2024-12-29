@@ -124,8 +124,8 @@ public class VehicleOperationsProvider {
             throw new RuntimeException("Could not find vehicle with plate number: " + plateNumber);
         }
         Select findVehicle = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
-                .all().where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER)
-                        .isEqualTo(literal(plateNumberRow.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER))));
+                .all().where(Relation.column(DatabaseConstants.ID)
+                        .isEqualTo(literal(plateNumberRow.getUuid(DatabaseConstants.ID))));
 
         Row vehicleRow = session.execute(findVehicle.build()).one();
         String discriminator = vehicleRow.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR);
@@ -261,9 +261,7 @@ public class VehicleOperationsProvider {
                         .ifColumn(DatabaseConstants.VEHICLE_VERSION).isEqualTo(literal(version));
 
                 fields.get(i).setAccessible(false);
-                //todo remember to uncomment
                 updates.addStatement(update.build());
-                //System.out.println("batch update: " + update.build().getQuery());
             }
 
             ResultSet resultSet = session.execute(updates.build());
@@ -284,7 +282,11 @@ public class VehicleOperationsProvider {
                 .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
                         .isEqualTo(literal(vehicle.getDiscriminator())))
                 .ifColumn(DatabaseConstants.VEHICLE_VERSION)
-                    .isEqualTo(literal(vehicle.getVersion()));
+                    .isEqualTo(literal(vehicle.getVersion()))
+                .ifColumn(DatabaseConstants.VEHICLE_RENTED)
+                    .isNotEqualTo(literal(rented))
+                .ifColumn(DatabaseConstants.VEHICLE_ARCHIVE)
+                    .isNotEqualTo(literal(true));
 
         boolean result = session.execute(update.build()).wasApplied();
         if (!result) {

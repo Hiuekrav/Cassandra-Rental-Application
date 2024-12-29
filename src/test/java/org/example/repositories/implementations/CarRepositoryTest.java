@@ -118,6 +118,15 @@ class CarRepositoryTest {
     }
 
     @Test
+    void changeRentedStatus_VehicleAlreadyRented() {
+        Car car = new Car(UUID.randomUUID(), "CB123", 200.0,30, Car.TransmissionType.AUTOMATIC);
+        vehicleRepository.save(car);
+        vehicleRepository.changeRentedStatus(car.getId(), true);
+        assertTrue(vehicleRepository.findById(car.getId()).isRented());
+        assertThrows(RuntimeException.class, ()-> vehicleRepository.changeRentedStatus(car.getId(), true));
+    }
+
+    @Test
     void changeRentedStatus_OptimisticLockException() {
         Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
         Vehicle savedCar = vehicleRepository.save(car);

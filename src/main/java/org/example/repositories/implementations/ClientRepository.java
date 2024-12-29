@@ -30,7 +30,7 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
                 .withColumn(DatabaseConstants.CLIENT_CITY_NAME, DataTypes.TEXT)
                 .withColumn(DatabaseConstants.CLIENT_STREET_NAME, DataTypes.TEXT)
                 .withColumn(DatabaseConstants.CLIENT_STREET_NUMBER, DataTypes.TEXT)
-                .withColumn(DatabaseConstants.CLIENT_CURRENT_RENTS, DataTypes.INT)
+                .withColumn(DatabaseConstants.CLIENT_ACTIVE_RENTS, DataTypes.INT)
                 .withColumn(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, DataTypes.UUID)
                 .build();
 
@@ -63,14 +63,14 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
 
     @Override
     public void increaseActiveRents(UUID id, int maxRents) {
-        if (!clientDao.increaseCurrentRentsNumber(id, 1, maxRents)) {
+        if (!clientDao.increaseActiveRentsNumber(id, 1, maxRents)) {
             throw new RuntimeException("Maximum rents limit reached!");
         }
     }
 
     @Override
-    public void decreaseActiveRents(UUID id, int maxRents) {
-        if (!clientDao.increaseCurrentRentsNumber(id, -1, maxRents)) {
+    public void decreaseActiveRents(UUID id) {
+        if (!clientDao.decreaseActiveRentsNumber(id, -1)) {
             throw new RuntimeException("Client does not have any rents!");
         }
     }

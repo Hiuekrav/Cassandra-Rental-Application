@@ -36,7 +36,7 @@ public class ClientOperationsProvider {
                 row.getString(DatabaseConstants.CLIENT_CITY_NAME),
                 row.getString(DatabaseConstants.CLIENT_STREET_NAME),
                 row.getString(DatabaseConstants.CLIENT_STREET_NUMBER),
-                row.getInt(DatabaseConstants.CLIENT_CURRENT_RENTS)
+                row.getInt(DatabaseConstants.CLIENT_ACTIVE_RENTS)
         );
     }
 
@@ -61,7 +61,7 @@ public class ClientOperationsProvider {
                 .setString(DatabaseConstants.CLIENT_STREET_NAME, client.getStreetName())
                 .setString(DatabaseConstants.CLIENT_STREET_NUMBER, client.getStreetNumber())
                 .setUuid(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, client.getClientTypeId())
-                .setInt(DatabaseConstants.CLIENT_CURRENT_RENTS, client.getCurrentRents());
+                .setInt(DatabaseConstants.CLIENT_ACTIVE_RENTS, client.getActiveRents());
 
         // find client type of created client
         SimpleStatement findClientType = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_TYPE_TABLE)
@@ -111,28 +111,31 @@ public class ClientOperationsProvider {
         return foundType.stream().map(row -> row.getUuid(DatabaseConstants.ID)).collect(Collectors.toList());
     }
 
-    public boolean increaseCurrentRentsNumber(UUID id, int number, int maxRents) {
+    public boolean increaseActiveRentsNumber(UUID id, int number, int maxRents) {
         // increase the counter only if its value is lesser than max rents,
-        // decrease only if it is greater or equal zero
         SimpleStatement changeNumber;
-        if (number > 0) {
-            changeNumber = QueryBuilder
-                    .update(DatabaseConstants.CLIENT_TABLE)
-                    .increment(DatabaseConstants.CLIENT_CURRENT_RENTS, literal(number))
-                    .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(id)))
-                    .ifColumn(DatabaseConstants.CLIENT_CURRENT_RENTS).isLessThan(literal(maxRents))
-                    .build();
-        }
-        else {
-            changeNumber = QueryBuilder
-                    .update(DatabaseConstants.CLIENT_TABLE)
-                    .increment(DatabaseConstants.CLIENT_CURRENT_RENTS, literal(number))
-                    .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(id)))
-                    .ifColumn(DatabaseConstants.CLIENT_CURRENT_RENTS).isGreaterThan(literal(0))
-                    .build();
-        }
+        changeNumber = QueryBuilder
+                .update(DatabaseConstants.CLIENT_TABLE)
+                .increment(DatabaseConstants.CLIENT_ACTIVE_RENTS, literal(number))
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(id)))
+                .ifColumn(DatabaseConstants.CLIENT_ACTIVE_RENTS).isLessThan(literal(maxRents))
+                .build();
         return session.execute(changeNumber).wasApplied();
     }
+
+    public boolean decreaseActiveRentsNumber(UUID id, int number) {
+        // decrease the counter only if it is greater or equal zero
+        SimpleStatement changeNumber;
+        changeNumber = QueryBuilder
+                .update(DatabaseConstants.CLIENT_TABLE)
+                .increment(DatabaseConstants.CLIENT_ACTIVE_RENTS, literal(number))
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(id)))
+                .ifColumn(DatabaseConstants.CLIENT_ACTIVE_RENTS).isGreaterThan(literal(0))
+                .build();
+        return session.execute(changeNumber).wasApplied();
+    }
+
+
 
     public boolean changeClientEmail(Client client, String newEmail) {
 

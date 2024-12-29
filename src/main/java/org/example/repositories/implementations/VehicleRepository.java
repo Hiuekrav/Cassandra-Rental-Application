@@ -17,9 +17,7 @@ import org.example.utils.consts.DatabaseConstants;
 
 import java.util.*;
 
-import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.truncate;
-import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createKeyspace;
 
 @Getter
 public class VehicleRepository extends ObjectRepository implements IVehicleRepository {
@@ -83,6 +81,10 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
 
     @Override
     public Vehicle findById(UUID id) {
+        Vehicle vehicle = vehicleDao.findById(id);
+        if (vehicle == null) {
+            throw new RuntimeException("Vehicle with provided id not found");
+        }
         return vehicleDao.findById(id);
     }
 
@@ -111,6 +113,10 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
         return vehicleDao.findAllMoped();
     }
 
+    @Override
+    public List<Vehicle> findAll() {
+        return vehicleDao.findAllVehicles().all();
+    }
 
     @Override
     public Vehicle save(Vehicle obj) {
@@ -133,7 +139,7 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
     public Vehicle changeRentedStatus(UUID id, Boolean status) {
         Vehicle foundVehicle = vehicleDao.findById(id);
         if (!vehicleDao.updateRented(foundVehicle, status)) {
-            throw new RuntimeException("Optimistic Lock Exception while updating vehicle with ID: " + foundVehicle.getId());
+            throw new RuntimeException("Change rent status failed");
         }
         return findById(id);
     }

@@ -1,144 +1,122 @@
 package org.example.services.implementations;
 
-//@Getter
-//public class RentService extends ObjectService implements IRentService {
-//
-//    private final IClientRepository clientRepository;
-//    private final IRentRepository rentRepository;
-//    private final IVehicleRepository vehicleRepository;
-//    private final IClientTypeRepository clientTypeRepository;
-//
-//
-//    public RentService(IVehicleRepository vehicleRepository) {
-//        super();
-//        this.rentRepository = new RentRepository(super.getClient(), RentMgd.class);
-//        this.vehicleRepository = vehicleRepository;
-//        this.clientRepository = new ClientRepository(super.getClient(), ClientMgd.class);
-//        this.clientTypeRepository = new ClientTypeRepository(super.getClient(), ClientTypeMgd.class);
-//    }
-//
-//
-//    @Override
-//    public Rent createRent(RentCreateDTO createRentDTO) {
-//        ClientSession clientSession  = super.getClient().startSession();
-//        try {
-//            clientSession.startTransaction();
-//            ClientMgd foundClient = clientRepository.findById(createRentDTO.clientId());
-//            VehicleMgd foundVehicle = vehicleRepository.findAnyVehicle(createRentDTO.vehicleId());
-//
-//            if (foundClient == null && foundVehicle == null) {
-//                throw new RuntimeException("RentRepository: Client or Vehicle not found");
-//            }
-//
-//            if (createRentDTO.endTime().isBefore(LocalDateTime.now())) {
-//                throw new RuntimeException("RentRepository: Invalid end time ");
-//
-//            }
-//
-//            ClientMgd clientMgd = clientRepository.findById(createRentDTO.clientId());
-//            ClientTypeMgd clientTypeMgd = clientTypeRepository.findAnyClientType(clientMgd.getClientType());
-//
-//            if (Objects.equals(clientMgd.getActiveRents(), clientTypeMgd.getMaxVehicles())) {
-//                throw new RuntimeException("RentRepository: Client has max vehicles");
-//            }
-//
-//            foundClient = clientRepository.increaseActiveRents(createRentDTO.clientId(), 1);
-//
-//
-//            foundVehicle = vehicleRepository.changeRentedStatus(foundVehicle.getId(), true);
-//
-//            Rent rent = new Rent(
-//                    UUID.randomUUID(),
-//                    createRentDTO.endTime(),
-//                    new Client(foundClient, new ClientType(clientTypeMgd)),
-//                    new Vehicle(foundVehicle)
-//            );
-//            RentMgd rentMgd = new RentMgd(rent, foundClient, foundVehicle);
-//            rentRepository.save(rentMgd);
-//            return rent;
-//        }
-//        catch (MongoWriteException e) {
-//            clientSession.abortTransaction();
-//            clientSession.close();
-//            throw new RuntimeException("RentRepository: Vehicle already rented!");
-//        }
-//        catch (RuntimeException e) {
-//            clientSession.abortTransaction();
-//            clientSession.close();
-//            throw e;
-//        }
-//    }
-//
-//    @Override
-//    public Rent findRentById(UUID id) {
-//        RentMgd rentMgd = rentRepository.findById(id);
-//        VehicleMgd vehicleMgd = vehicleRepository.findAnyVehicle(rentMgd.getVehicle().getId());
-//        ClientMgd clientMgd = clientRepository.findById(rentMgd.getClient().getId());
-//        ClientTypeMgd clientTypeMgd = clientTypeRepository.findAnyClientType(clientMgd.getClientType());
-//        ClientType clientType = new ClientType(clientTypeMgd);
-//
-//        return new Rent(rentMgd, new Client(clientMgd, clientType), new Vehicle(vehicleMgd));
-//
-//    }
-//
-//    @Override
-//    public List<Rent> findAllActiveByClientID(UUID clientId) {
-//        return rentRepository.findAllActiveByClientId(clientId).stream().map(Rent::new).toList();
-//    }
-//
-//    @Override
-//    public List<Rent> findAllArchivedByClientID(UUID clientId) {
-//        return rentRepository.findAllArchivedByClientId(clientId).stream().map(Rent::new).toList();
-//    }
-//
-//    @Override
-//    public List<Rent> findAllActiveByVehicleID(UUID vehicleId) {
-//        return rentRepository.findAllActiveByVehicleId(vehicleId).stream().map(Rent::new).toList();
-//    }
-//
-//    @Override
-//    public List<Rent> findAllArchivedByVehicleID(UUID vehicleId) {
-//        return rentRepository.findAllArchivedByVehicleId(vehicleId).stream().map(Rent::new).toList();
-//    }
-//
-//    @Override
-//    public Rent updateRent(UUID id, LocalDateTime endTime) {
-//
-//        RentMgd rentMgd = rentRepository.findActiveById(id);
-//        VehicleMgd vehicleMgd = vehicleRepository.findById(rentMgd.getVehicle().getId());
-//        ClientMgd clientMgd = clientRepository.findById(rentMgd.getClient().getId());
-//
-//        Rent rent = findRentById(id);
-//
-//        try {
-//            if (!endTime.isAfter(rentMgd.getEndTime()) ) {
-//                throw new RuntimeException("RentRepository: New Rent end time cannot be before current rent end time");
-//            }
-//            rent.setEndTime(endTime);
-//            rent.recalculateRentCost();
-//            rentRepository.save(new RentMgd(rent, clientMgd, vehicleMgd));
-//            return rent;
-//
-//        } catch (RuntimeException e) {
-//            throw new RuntimeException("RentRepository: New Rent end time cannot be before current rent end time");
-//        }
-//
-//    }
-//
-//    @Override
-//    public void endRent(UUID id) {
-//        ClientSession clientSession = rentRepository.getClient().startSession();
-//        try {
-//            clientSession.startTransaction();
-//            RentMgd rent = rentRepository.findActiveById(id);
-//            vehicleRepository.changeRentedStatus(rent.getVehicle().getId(), false);
-//            clientRepository.increaseActiveRents(rent.getClient().getId(), -1);
-//            rentRepository.moveRentToArchived(id);
-//            clientSession.commitTransaction();
-//        } catch (RuntimeException e) {
-//            clientSession.abortTransaction();
-//            clientSession.close();
-//            throw e;
-//        }
-//    }
-//}
+import org.example.commons.dto.create.RentCreateDTO;
+import org.example.model.Client;
+import org.example.model.Rent;
+import org.example.model.clientType.ClientType;
+import org.example.model.vehicle.Vehicle;
+import org.example.repositories.implementations.ClientRepository;
+import org.example.repositories.implementations.ClientTypeRepository;
+import org.example.repositories.implementations.RentRepository;
+import org.example.repositories.implementations.VehicleRepository;
+import org.example.repositories.interfaces.IClientRepository;
+import org.example.repositories.interfaces.IClientTypeRepository;
+import org.example.repositories.interfaces.IRentRepository;
+import org.example.repositories.interfaces.IVehicleRepository;
+import org.example.services.interfaces.IObjectService;
+import org.example.services.interfaces.IRentService;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+
+public class RentService implements IRentService {
+
+    private final IClientRepository clientRepository = new ClientRepository();
+    private final IRentRepository rentRepository = new RentRepository();
+    private final IVehicleRepository vehicleRepository = new VehicleRepository();
+    private final IClientTypeRepository clientTypeRepository = new ClientTypeRepository();
+
+
+    @Override
+    public Rent createRent(RentCreateDTO createRentDTO) {
+
+        Client foundClient = clientRepository.findById(createRentDTO.clientId());
+        Vehicle foundVehicle = vehicleRepository.findById(createRentDTO.vehicleId());
+
+        if (createRentDTO.endTime().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("RentRepository: Invalid end time ");
+        }
+
+        Client client = clientRepository.findById(createRentDTO.clientId());
+        ClientType clientType = clientTypeRepository.findById(client.getClientTypeId());
+
+        if (Objects.equals(client.getActiveRents(), clientType.getMaxVehicles())) {
+            throw new RuntimeException("RentRepository: Client has max vehicles");
+        }
+
+        foundVehicle = vehicleRepository.changeRentedStatus(foundVehicle.getId(), true);
+
+        clientRepository.increaseActiveRents(createRentDTO.clientId(), clientType.getMaxVehicles());
+
+        Rent rent = new Rent(
+                UUID.randomUUID(),
+                createRentDTO.endTime(),
+                foundClient,
+                foundVehicle
+        );
+
+        rent.recalculateRentCost(foundVehicle, client, clientType);
+        rentRepository.save(rent);
+        return rent;
+
+    }
+
+    @Override
+    public Rent findRentById(UUID id) {
+        return rentRepository.findById(id);
+
+    }
+
+    @Override
+    public List<Rent> findAllActiveByClientID(UUID clientId) {
+        return rentRepository.findAllActiveByClientId(clientId);
+    }
+
+    @Override
+    public List<Rent> findAllArchivedByClientID(UUID clientId) {
+        return rentRepository.findAllArchivedByClientId(clientId);
+    }
+
+    @Override
+    public List<Rent> findAllActiveByVehicleID(UUID vehicleId) {
+        return rentRepository.findAllActiveByVehicleId(vehicleId);
+    }
+
+    @Override
+    public List<Rent> findAllArchivedByVehicleID(UUID vehicleId) {
+        return rentRepository.findAllArchivedByVehicleId(vehicleId);
+    }
+
+    @Override
+    public Rent updateRent(UUID id, LocalDateTime endTime) {
+
+        Rent rent = findRentById(id);
+        Vehicle foundVehicle = vehicleRepository.findById(rent.getVehicleId());
+        Client foundClient = clientRepository.findById(rent.getClientId());
+        ClientType foundClientType = clientTypeRepository.findById(foundClient.getClientTypeId());
+
+        if (!endTime.isAfter(rent.getEndTime()) ) {
+            throw new RuntimeException("RentRepository: New Rent end time cannot be before current rent end time");
+        }
+        rent.setEndTime(endTime);
+        rent.recalculateRentCost(foundVehicle, foundClient, foundClientType);
+        rentRepository.save(rent);
+        return rent;
+    }
+
+    @Override
+    public void endRent(UUID id) {
+        Rent rent = rentRepository.findActiveById(id);
+        vehicleRepository.changeRentedStatus(rent.getVehicleId(), false);
+        clientRepository.decreaseActiveRents(rent.getClientId());
+        rentRepository.endRent(id);
+    }
+
+    @Override
+    public void deleteAll() {
+        rentRepository.deleteAll();
+    }
+}

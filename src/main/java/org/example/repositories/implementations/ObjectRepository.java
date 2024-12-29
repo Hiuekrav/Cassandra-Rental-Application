@@ -6,12 +6,9 @@ import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
 import lombok.Getter;
 import org.example.codecs.LocalDateTimeCodec;
 import org.example.codecs.TransmissionTypeCodec;
-import org.example.model.AbstractEntity;
-import org.example.repositories.interfaces.IObjectRepository;
 import org.example.utils.consts.DatabaseConstants;
 
 import java.net.InetSocketAddress;
-import java.util.*;
 
 
 import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createKeyspace;

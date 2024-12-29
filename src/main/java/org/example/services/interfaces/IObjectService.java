@@ -2,5 +2,5 @@ package org.example.services.interfaces;
 
 public interface IObjectService {
 
-    void initDatabaseConnection();
+    void deleteAll();
 }

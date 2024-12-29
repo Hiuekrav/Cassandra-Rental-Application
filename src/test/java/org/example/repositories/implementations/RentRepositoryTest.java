@@ -40,7 +40,7 @@ class RentRepositoryTest {
         String email = "test@test.com";
         ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
         clientTypeRepository.save(silver);
-        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
                 email, silver.getId(), "Wawa", "Kwiatowa", "15");
 
         clientRepository.save(client);
@@ -56,104 +56,95 @@ class RentRepositoryTest {
         assertEquals(1, rentRepository.findAll().size());
     }
 
-    //@Test
-    //void findAllActiveByClientId() {
-    //    String email = "test@test.com";
-    //    ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
-    //    Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-    //            email, silver, "Wawa", "Kwiatowa", "15");
-    //    ClientMgd clientMgd = new ClientMgd(client);
-    //    clientRepository.save(clientMgd);
-    //
-    //    Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
-    //    BicycleMgd bicycleMgd = new BicycleMgd(bicycle);
-    //    vehicleRepository.save(bicycleMgd);
-    //
-    //    Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
-    //    RentMgd rentMgd = new RentMgd(rent, clientMgd, bicycleMgd);
-    //    rentRepository.save(rentMgd);
-    //
-    //    List<RentMgd> rentMgds = rentRepository.findAllActiveByClientId(clientMgd.getId());
-    //    assertEquals(1, rentMgds.size());
-    //    assertEquals(rentMgd.getId(), rentMgds.getFirst().getId());
-    //    assertEquals(clientMgd, rentRepository.findById(rentMgd.getId()).getClient());
-    //    assertEquals(clientMgd.getId(), rentRepository.findById(rentMgd.getId()).getClient().getId());
-    //    assertEquals(bicycleMgd.getId(), rentRepository.findById(rentMgd.getId()).getVehicle().getId());
-    //
-    //}
+    @Test
+    void findAllActiveByClientId() {
+        String email = "test@test.com";
+        ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
 
-    //@Test
-    //void findAllArchivedByClientId() {
-    //
-    //    String email = "test@test.com";
-    //    ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
-    //    Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-    //            email, silver, "Wawa", "Kwiatowa", "15");
-    //    ClientMgd clientMgd = new ClientMgd(client);
-    //    clientRepository.save(clientMgd);
-    //
-    //    Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
-    //    BicycleMgd bicycleMgd = new BicycleMgd(bicycle);
-    //    vehicleRepository.save(bicycleMgd);
-    //
-    //    Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
-    //    RentMgd rentMgd = new RentMgd(rent, clientMgd, bicycleMgd);
-    //    rentRepository.save(rentMgd);
-    //
-    //    List<RentMgd> active = rentRepository.findAllActiveByClientId(clientMgd.getId());
-    //    assertEquals(1, active.size());
-    //    rentRepository.moveRentToArchived(rentMgd.getId());
-    //    active = rentRepository.findAllActiveByClientId(clientMgd.getId());
-    //    assertEquals(0, active.size());
-    //    List<RentMgd> archived = rentRepository.findAllArchivedByClientId(clientMgd.getId());
-    //    assertEquals(1, archived.size());
-    //    assertEquals(rentMgd.getId(), archived.getFirst().getId());
-    //}
+        Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
+        vehicleRepository.save(bicycle);
 
-    //@Test
-    //void findAllByClientId() {
-    //    String email = "test@test.com";
-    //    ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
-    //    Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-    //            email, silver, "Wawa", "Kwiatowa", "15");
-    //    ClientMgd clientMgd = new ClientMgd(client);
-    //    clientRepository.save(clientMgd);
-    //
-    //    Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
-    //    BicycleMgd bicycleMgd = new BicycleMgd(bicycle);
-    //    vehicleRepository.save(bicycleMgd);
-    //
-    //    Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
-    //    RentMgd rentMgd = new RentMgd(rent, clientMgd, bicycleMgd);
-    //    rentRepository.save(rentMgd);
-    //
-    //    Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
-    //    CarMgd carMgd = new CarMgd(car);
-    //    vehicleRepository.save(carMgd);
-    //
-    //    Rent rent2 = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, car);
-    //    RentMgd rentMgd2 = new RentMgd(rent2, clientMgd, carMgd);
-    //    rentRepository.save(rentMgd2);
-    //
-    //    rentRepository.moveRentToArchived(rentMgd.getId());
-    //
-    //    List<RentMgd> archived = rentRepository.findAllArchivedByClientId(clientMgd.getId());
-    //    assertEquals(1, archived.size());
-    //    assertEquals(rentMgd.getId(), archived.getFirst().getId());
-    //
-    //    List<RentMgd> active = rentRepository.findAllActiveByClientId(clientMgd.getId());
-    //    assertEquals(1, archived.size());
-    //    assertEquals(rentMgd2.getId(), active.getFirst().getId());
-    //
-    //    assertEquals(2, rentRepository.findAllByClientId(clientMgd.getId()).size());
-    //}
+        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
+        rentRepository.save(rent);
+
+        List<Rent> rents = rentRepository.findAllActiveByClientId(client.getId());
+        assertEquals(1, rents.size());
+        assertEquals(rent.getId(), rents.getFirst().getId());
+        assertEquals(client.getId(), rentRepository.findById(rent.getId()).getClientId());
+        assertEquals(bicycle.getId(), rentRepository.findById(rent.getId()).getVehicleId());
+
+    }
+
+    @Test
+    void findAllArchivedByClientId() {
+
+        String email = "test@test.com";
+        ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
+        vehicleRepository.save(bicycle);
+
+        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
+        rentRepository.save(rent);
+
+        List<Rent> active = rentRepository.findAllActiveByClientId(client.getId());
+        assertEquals(1, active.size());
+        rentRepository.endRent(rent.getId());
+        active = rentRepository.findAllActiveByClientId(client.getId());
+        assertEquals(0, active.size());
+        List<Rent> archived = rentRepository.findAllArchivedByClientId(client.getId());
+        assertEquals(1, archived.size());
+        assertEquals(rent.getId(), archived.getFirst().getId());
+    }
+
+    @Test
+    void findAllByClientId() {
+        String email = "test@test.com";
+        ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
+        vehicleRepository.save(bicycle);
+
+        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
+        rentRepository.save(rent);
+
+        Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
+        vehicleRepository.save(car);
+
+        Rent rent2 = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, car);
+        rentRepository.save(rent2);
+
+        rentRepository.endRent(rent.getId());
+
+        List<Rent> archived = rentRepository.findAllArchivedByClientId(client.getId());
+        assertEquals(1, archived.size());
+        assertEquals(rent.getId(), archived.getFirst().getId());
+
+        List<Rent> active = rentRepository.findAllActiveByClientId(client.getId());
+        assertEquals(1, active.size());
+        assertEquals(rent2.getId(), active.getFirst().getId());
+
+        assertEquals(2, rentRepository.findAllByClientId(client.getId()).size());
+    }
 
     @Test
     void findAllActiveByVehicleId() {
         String email = "test@test.com";
         ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
         clientTypeRepository.save(silver);
-        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
                 email, silver.getId(), "Wawa", "Kwiatowa", "15");
         clientRepository.save(client);
 
@@ -167,60 +158,92 @@ class RentRepositoryTest {
         assertEquals(1, active.size());
     }
 
-    //@Test
-    //void findAllArchivedByVehicleId() {
-    //    String email = "test@test.com";
-    //    ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
-    //    Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-    //            email, silver, "Wawa", "Kwiatowa", "15");
-    //    ClientMgd clientMgd = new ClientMgd(client);
-    //    clientRepository.save(clientMgd);
-    //
-    //    Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
-    //    BicycleMgd bicycleMgd = new BicycleMgd(bicycle);
-    //    vehicleRepository.save(bicycleMgd);
-    //
-    //    Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
-    //    RentMgd rentMgd = new RentMgd(rent, clientMgd, bicycleMgd);
-    //    rentRepository.save(rentMgd);
-    //
-    //    List<RentMgd> active = rentRepository.findAllActiveByVehicleId(bicycleMgd.getId());
-    //    assertEquals(1, active.size());
-    //    rentRepository.moveRentToArchived(rentMgd.getId());
-    //    active = rentRepository.findAllActiveByVehicleId(bicycleMgd.getId());
-    //    assertEquals(0, active.size());
-    //    List<RentMgd> archived = rentRepository.findAllArchivedByVehicleId(bicycleMgd.getId());
-    //    assertEquals(1, archived.size());
-    //    assertEquals(rentMgd.getId(), archived.getFirst().getId());
-    //}
+    @Test
+    void findAllArchivedByVehicleId() {
+        String email = "test@test.com";
+        ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
+        vehicleRepository.save(bicycle);
+
+        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
+        rentRepository.save(rent);
+
+        List<Rent> active = rentRepository.findAllActiveByVehicleId(bicycle.getId());
+        assertEquals(1, active.size());
+        rentRepository.endRent(rent.getId());
+        active = rentRepository.findAllActiveByVehicleId(bicycle.getId());
+        assertEquals(0, active.size());
+        List<Rent> archived = rentRepository.findAllArchivedByVehicleId(bicycle.getId());
+        assertEquals(1, archived.size());
+        assertEquals(rent.getId(), archived.getFirst().getId());
+    }
 
 
-    //
-    //@Test
-    //void findAllByVehicleId() {
-    //    String email = "test@test.com";
-    //    ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
-    //    Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-    //            email, silver, "Wawa", "Kwiatowa", "15");
-    //    ClientMgd clientMgd = new ClientMgd(client);
-    //    clientRepository.save(clientMgd);
-    //
-    //    Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
-    //    BicycleMgd bicycleMgd = new BicycleMgd(bicycle);
-    //    vehicleRepository.save(bicycleMgd);
-    //
-    //    Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
-    //    RentMgd rentMgd = new RentMgd(rent, clientMgd, bicycleMgd);
-    //    rentRepository.save(rentMgd);
-    //
-    //    rentRepository.moveRentToArchived(rentMgd.getId());
-    //
-    //    Rent rent2 = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
-    //    RentMgd rentMgd2 = new RentMgd(rent2, clientMgd, bicycleMgd);
-    //    rentRepository.save(rentMgd2);
-    //
-    //    assertEquals(2, rentRepository.findAllByVehicleId(bicycleMgd.getId()).size());
-    //}
+
+    @Test
+    void findAllByVehicleId() {
+        String email = "test@test.com";
+        ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
+        vehicleRepository.save(bicycle);
+
+        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
+        rentRepository.save(rent);
+
+        Rent rent2 = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(6),client, bicycle);
+        rentRepository.save(rent2);
+
+        assertEquals(2, rentRepository.findAllActiveByVehicleId(bicycle.getId()).size());
+
+        rentRepository.endRent(rent.getId());
+
+        List<Rent> archived = rentRepository.findAllArchivedByVehicleId(bicycle.getId());
+        assertEquals(1, archived.size());
+        assertEquals(rent.getId(), archived.getFirst().getId());
+
+        List<Rent> active = rentRepository.findAllActiveByVehicleId(bicycle.getId());
+        assertEquals(1, active.size());
+        assertEquals(rent2.getId(), active.getFirst().getId());
+
+        assertEquals(2, rentRepository.findAllByVehicleId(bicycle.getId()).size());
+    }
+
+
+    @Test
+    void deleteRentById() {
+
+        String email = "test@test.com";
+        ClientType silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        Bicycle bicycle = new Bicycle(UUID.randomUUID(),"AA123", 100.0,2);
+        vehicleRepository.save(bicycle);
+
+        Rent rent = new Rent(UUID.randomUUID(), LocalDateTime.now().plusHours(4),client, bicycle);
+        rentRepository.save(rent);
+
+        assertEquals(1, rentRepository.findAllActiveByVehicleId(bicycle.getId()).size());
+
+        rentRepository.deleteById(rent.getId());
+        assertEquals(0, rentRepository.findAllByVehicleId(bicycle.getId()).size());
+        assertEquals(0, rentRepository.findAll().size());
+        assertEquals(0, rentRepository.findAllByClientId(client.getId()).size());
+
+
+    }
 
 
 }

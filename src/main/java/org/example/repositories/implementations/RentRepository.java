@@ -5,7 +5,6 @@ import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import com.datastax.oss.driver.api.querybuilder.truncate.Truncate;
 import org.example.dao.RentDao;
-import org.example.dao.RentMapper;
 import org.example.dao.RentMapperBuilder;
 import org.example.model.Rent;
 import org.example.repositories.interfaces.IRentRepository;
@@ -28,8 +27,8 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
                 .createTable(DatabaseConstants.RENT_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.ID, DataTypes.UUID)
+                .withClusteringColumn(DatabaseConstants.RENT_END_TIME, DataTypes.TIMESTAMP)
                 .withColumn(DatabaseConstants.RENT_BEGIN_TIME, DataTypes.TIMESTAMP)
-                .withColumn(DatabaseConstants.RENT_END_TIME, DataTypes.TIMESTAMP)
                 .withColumn(DatabaseConstants.RENT_CLIENT_ID, DataTypes.UUID)
                 .withColumn(DatabaseConstants.RENT_VEHICLE_ID, DataTypes.UUID)
                 .withColumn(DatabaseConstants.RENT_RENT_COST, DataTypes.DOUBLE)
@@ -37,12 +36,16 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
 
         getSession().execute(createRentsTable);
 
+        /* order of the clustering columns is important, because you can search by partition key and first
+        clustering column but searching by any other clustering column requires primary key and all preceding
+         clustering columns
+        */
         SimpleStatement createRentByClientTable = SchemaBuilder
                 .createTable(DatabaseConstants.RENT_BY_CLIENT_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.RENT_CLIENT_ID, DataTypes.UUID)
                 .withClusteringColumn(DatabaseConstants.RENT_END_TIME, DataTypes.TIMESTAMP)
-                .withColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .withClusteringColumn(DatabaseConstants.ID, DataTypes.UUID)
                 .withColumn(DatabaseConstants.RENT_BEGIN_TIME, DataTypes.TIMESTAMP)
                 .withColumn(DatabaseConstants.RENT_VEHICLE_ID, DataTypes.UUID)
                 .withColumn(DatabaseConstants.RENT_RENT_COST, DataTypes.DOUBLE)
@@ -55,7 +58,7 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.RENT_VEHICLE_ID, DataTypes.UUID)
                 .withClusteringColumn(DatabaseConstants.RENT_END_TIME, DataTypes.TIMESTAMP)
-                .withColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .withClusteringColumn(DatabaseConstants.ID, DataTypes.UUID)
                 .withColumn(DatabaseConstants.RENT_BEGIN_TIME, DataTypes.TIMESTAMP)
                 .withColumn(DatabaseConstants.RENT_CLIENT_ID, DataTypes.UUID)
                 .withColumn(DatabaseConstants.RENT_RENT_COST, DataTypes.DOUBLE)
@@ -82,16 +85,19 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
 
     @Override
     public List<Rent> findAll() {
-        return List.of();
+        return rentDao.findAll().all();
     }
 
     @Override
     public Rent save(Rent obj) {
         Rent foundRent = findByIdOrNull(obj.getId());
-        if (foundRent != null && !rentDao.update(foundRent.getId(), obj.getEndTime())) {
+        if (foundRent != null && !rentDao.update(foundRent.getId(), obj.getEndTime(), obj.getRentCost())) {
             throw new RuntimeException("Rent with id " + obj.getId() + " already ended!");
         } else {
-            rentDao.create(obj);
+            boolean result = rentDao.create(obj);
+            if (!result) {
+                throw new RuntimeException("Failed to save Rent");
+            }
         }
         return findById(obj.getId());
     }
@@ -115,7 +121,7 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
 
     public void endRent(UUID rentId) {
         Rent foundRent = findById(rentId);
-        if (rentDao.update(foundRent.getId(), LocalDateTime.now())) {
+        if (!rentDao.update(foundRent.getId(), LocalDateTime.now(), null)) {
             throw new RuntimeException("Rent with id " + rentId + " already ended!");
         }
     }
@@ -123,32 +129,32 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
 
     @Override
     public Rent findActiveById(UUID id) {
-        return null;
+        return rentDao.findActiveById(id);
     }
 
     @Override
     public Rent findArchiveById(UUID id) {
-        return null;
+        return rentDao.findArchivedById(id);
     }
 
     @Override
     public List<Rent> findAllActiveByClientId(UUID clientId) {
-        return null;
+        return rentDao.findAllActiveByClientId(clientId);
     }
 
     @Override
     public List<Rent> findAllArchivedByClientId(UUID clientId) {
-        return null;
+        return rentDao.findAllArchivedByClientId(clientId);
     }
 
     @Override
     public List<Rent> findAllByClientId(UUID clientId) {
-        return null;
+        return rentDao.findAllByClientId(clientId);
     }
 
     @Override
     public List<Rent> findAllArchivedByVehicleId(UUID vehicleId) {
-        return null;
+        return rentDao.findAllArchivedByVehicleId(vehicleId);
     }
 
     @Override
@@ -158,7 +164,7 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
 
     @Override
     public List<Rent> findAllByVehicleId(UUID vehicleId) {
-        return null;
+        return rentDao.findAllByVehicleId(vehicleId);
     }
 
 }

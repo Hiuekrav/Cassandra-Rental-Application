@@ -1,16 +1,11 @@
 package org.example.repositories.implementations;
 
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
-import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
 import com.datastax.oss.driver.api.querybuilder.truncate.Truncate;
-import org.example.codecs.TransmissionTypeCodec;
 import org.example.dao.ClientTypeDao;
-import org.example.dao.ClientTypeMapper;
 import org.example.dao.ClientTypeMapperBuilder;
 import org.example.model.clientType.ClientType;
 import org.example.repositories.interfaces.IClientTypeRepository;
@@ -46,7 +41,7 @@ public class ClientTypeRepository extends ObjectRepository implements IClientTyp
     public ClientType findById(UUID id) {
         ClientType foundClientType = clientTypeDao.findById(id);
         if (foundClientType == null) {
-            throw new RuntimeException("Client type with id " + id + " not found");
+            throw new RuntimeException("Client type with provided id not found");
         }
         return foundClientType;
     }

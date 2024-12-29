@@ -1,223 +1,199 @@
 package org.example.services.implementations;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-//
-//public class RentServiceTest {
-//
-//    private IVehicleRepository vehicleRepository;
-//    private IRentService rentService;
-//    private IRentRepository rentRepository;
-//    private IClientRepository clientRepository;
-//    private IClientTypeRepository clientTypeRepository;
-//    private static MongoClient client;
-//
-//     @BeforeAll
-//    static void connect() {
-//        ConnectionString connectionString = new ConnectionString(DatabaseConstants.connectionString);
-//
-//        MongoCredential credential = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
-//
-//        CodecRegistry pojoCodecRegistry = CodecRegistries.fromProviders(PojoCodecProvider.builder()
-//                .automatic(true)
-//                .conventions(List.of(Conventions.ANNOTATION_CONVENTION)).build());
-//
-//        MongoClientSettings settings = MongoClientSettings.builder()
-//                .credential(credential)
-//                .applyConnectionString(connectionString)
-//                .uuidRepresentation(UuidRepresentation.STANDARD)
-//                .codecRegistry(
-//                        CodecRegistries.fromRegistries(
-//                                MongoClientSettings.getDefaultCodecRegistry(),
-//                                pojoCodecRegistry
-//                        ))
-//                .readConcern(ReadConcern.MAJORITY)
-//                .writeConcern(WriteConcern.MAJORITY)
-//                .readPreference(ReadPreference.primary())
-//                .build();
-//
-//        client = MongoClients.create(settings);
-//        client.getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.RENT_ACTIVE_COLLECTION_NAME).drop();
-//        client.getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.RENT_ARCHIVE_COLLECTION_NAME).drop();
-//        client.getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.VEHICLE_COLLECTION_NAME).drop();
-//        client.getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.CLIENT_TYPE_COLLECTION_NAME).drop();
-//        client.getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.CLIENT_COLLECTION_NAME).drop();
-//    }
-//
-//    @BeforeEach
-//    void setUp() {
-//        rentRepository = new RentRepository(client, RentMgd.class);
-//        clientRepository = new ClientRepository(client, ClientMgd.class);
-//        clientTypeRepository = new ClientTypeRepository(client, ClientTypeMgd.class);
-//        vehicleRepository = new VehicleRepositoryDecorator(client);
-//        rentService = new RentService(vehicleRepository);
-//    }
-//
-//    @AfterEach
-//    void dropDatabase() {
-//        vehicleRepository.getClient().getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.VEHICLE_COLLECTION_NAME).drop();
-//        rentRepository.getClient().getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.RENT_ARCHIVE_COLLECTION_NAME).drop();
-//        rentRepository.getClient().getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.RENT_ACTIVE_COLLECTION_NAME).drop();
-//        clientRepository.getClient().getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.CLIENT_COLLECTION_NAME).drop();
-//        clientTypeRepository.getClient().getDatabase(DatabaseConstants.DATABASE_NAME).getCollection(DatabaseConstants.CLIENT_TYPE_COLLECTION_NAME).drop();
-//
-//    }
-//
-//    @Test
-//    void createRent() {
-//        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
-//
-//        vehicleRepository.save(new CarMgd(car));
-//        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
-//        String email = "test23@test.com";
-//        Silver silver = new Silver(UUID.randomUUID(), 10.0, 5);
-//        clientTypeRepository.save(new SilverMgd(silver));
-//        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-//                email, silver, "Wawa", "Kwiatowa", "15");
-//        clientRepository.save(new ClientMgd(client));
-//
-//        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
-//
-//        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
-//
-//        Rent newRent = rentService.createRent(rentCreateDTO);
-//
-//        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
-//        assertEquals(endTime, newRent.getEndTime());
-//
-//        assertEquals(790, rentService.findRentById(newRent.getId()).getRentCost());
-//        assertEquals(car.getId(), rentService.findRentById(newRent.getId()).getVehicle().getId());
-//        assertEquals(client.getId(), rentService.findRentById(newRent.getId()).getClient().getId());
-//        assertEquals(1, clientRepository.findById(client.getId()).getActiveRents());
-//        assertEquals(1, vehicleRepository.findById(car.getId()).getRented());
-//    }
-//
-//    @Test
-//    void createRent_MaxVehiclesExceeded() {
-//        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
-//
-//        vehicleRepository.save(new CarMgd(car));
-//        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
-//        String email = "test23@test.com";
-//        Silver silver = new Silver(UUID.randomUUID(), 12.0, 1);
-//        clientTypeRepository.save(new SilverMgd(silver));
-//        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-//                email, silver, "Wawa", "Kwiatowa", "15");
-//        clientRepository.save(new ClientMgd(client));
-//
-//        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
-//
-//        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
-//
-//        Rent newRent = rentService.createRent(rentCreateDTO);
-//
-//        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
-//
-//        Car car2 = new Car(UUID.randomUUID(),"AA1234", 200.0,3, Car.TransmissionType.MANUAL);
-//        vehicleRepository.save(new CarMgd(car2));
-//        RentCreateDTO rent2CreateDTO = new RentCreateDTO(endTime, client.getId(), car2.getId());
-//        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> rentService.createRent(rent2CreateDTO));
-//        assertEquals("RentRepository: Client has max vehicles", runtimeException.getMessage());
-//    }
-//
-//    @Test
-//    void createRent_VehicleAlreadyRented() {
-//        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
-//
-//        vehicleRepository.save(new CarMgd(car));
-//        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
-//        String email = "test23@test.com";
-//        Silver silver = new Silver(UUID.randomUUID(), 12.0, 2);
-//        clientTypeRepository.save(new SilverMgd(silver));
-//        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-//                email, silver, "Wawa", "Kwiatowa", "15");
-//        clientRepository.save(new ClientMgd(client));
-//
-//        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
-//
-//        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
-//
-//        Rent newRent = rentService.createRent(rentCreateDTO);
-//
-//        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
-//
-//        RentCreateDTO rent2CreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
-//        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> rentService.createRent(rent2CreateDTO));
-//        assertEquals("RentRepository: Vehicle already rented!", runtimeException.getMessage());
-//    }
-//
-//    @Test
-//    void updateRent() {
-//        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
-//
-//        vehicleRepository.save(new CarMgd(car));
-//        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
-//        String email = "test23@test.com";
-//        Silver silver = new Silver(UUID.randomUUID(), 10.0, 5);
-//        clientTypeRepository.save(new SilverMgd(silver));
-//        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-//                email, silver, "Wawa", "Kwiatowa", "15");
-//        clientRepository.save(new ClientMgd(client));
-//
-//        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
-//
-//        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
-//
-//        Rent newRent = rentService.createRent(rentCreateDTO);
-//        assertEquals(790, rentService.findRentById(newRent.getId()).getRentCost());
-//        LocalDateTime newTime = endTime.plusHours(2);
-//
-//        Rent modifiedRent = rentService.updateRent(newRent.getId(), newTime);
-//
-//        assertEquals(newTime, modifiedRent.getEndTime());
-//        assertEquals(990, rentService.findRentById(newRent.getId()).getRentCost());
-//    }
-//
-//    @Test
-//    void updateRent_Failure() {
-//        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
-//
-//        vehicleRepository.save(new CarMgd(car));
-//        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
-//        String email = "test23@test.com";
-//        Silver silver = new Silver(UUID.randomUUID(), 10.0, 5);
-//        clientTypeRepository.save(new SilverMgd(silver));
-//        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-//                email, silver, "Wawa", "Kwiatowa", "15");
-//        clientRepository.save(new ClientMgd(client));
-//        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
-//        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
-//        Rent newRent = rentService.createRent(rentCreateDTO);
-//
-//        LocalDateTime newTime = endTime.minusHours(1);
-//
-//        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> rentService.updateRent(newRent.getId(), newTime));
-//        assertEquals("RentRepository: New Rent end time cannot be before current rent end time", runtimeException.getMessage());
-//    }
-//
-//
-//    @Test
-//    void endRent() {
-//        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
-//        vehicleRepository.save(new CarMgd(car));
-//        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
-//        String email = "test@test.com";
-//        Silver silver = new Silver(UUID.randomUUID(), 12.0, 5);
-//        clientTypeRepository.save(new SilverMgd(silver));
-//        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
-//                email, silver, "Wawa", "Kwiatowa", "15");
-//        clientRepository.save(new ClientMgd(client));
-//        RentCreateDTO rentCreateDTO = new RentCreateDTO(LocalDateTime.now().plusHours(10), client.getId(), car.getId());
-//        Rent newRent = rentService.createRent(rentCreateDTO);
-//
-//        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
-//        assertEquals(car.getId(), rentService.findRentById(newRent.getId()).getVehicle().getId());
-//        assertEquals(1, vehicleRepository.findById(car.getId()).getRented());
-//        assertEquals(1, clientRepository.findById(client.getId()).getActiveRents());
-//        rentService.endRent(newRent.getId());
-//        assertEquals(1, rentRepository.findAllArchivedByVehicleId(newRent.getVehicle().getId()).size());
-//        assertEquals(0, rentRepository.findAllActiveByVehicleId(newRent.getVehicle().getId()).size());
-//        assertEquals(0, vehicleRepository.findById(car.getId()).getRented());
-//        assertEquals(0, clientRepository.findById(client.getId()).getActiveRents());
-//    }
-//}
+import org.example.commons.dto.create.RentCreateDTO;
+import org.example.model.Client;
+import org.example.model.Rent;
+import org.example.model.clientType.Silver;
+import org.example.model.vehicle.Car;
+import org.example.repositories.implementations.ClientRepository;
+import org.example.repositories.implementations.ClientTypeRepository;
+import org.example.repositories.implementations.RentRepository;
+import org.example.repositories.implementations.VehicleRepository;
+import org.example.repositories.interfaces.IClientRepository;
+import org.example.repositories.interfaces.IClientTypeRepository;
+import org.example.repositories.interfaces.IRentRepository;
+import org.example.repositories.interfaces.IVehicleRepository;
+import org.example.services.interfaces.IRentService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RentServiceTest {
+
+    private final IVehicleRepository vehicleRepository = new VehicleRepository();
+    private final IRentService rentService = new RentService();
+    private final IRentRepository rentRepository = new RentRepository();
+    private final IClientRepository clientRepository = new ClientRepository();
+    private final IClientTypeRepository clientTypeRepository = new ClientTypeRepository();
+
+    @BeforeEach
+    void setUp() {
+        rentRepository.deleteAll();
+        clientRepository.deleteAll();
+        clientTypeRepository.deleteAll();
+        vehicleRepository.deleteAll();
+    }
+
+    @Test
+    void createRent() {
+        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
+
+        vehicleRepository.save(car);
+        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
+        String email = "test23@test.com";
+        Silver silver = new Silver(UUID.randomUUID(), 10.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
+
+        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
+
+        Rent newRent = rentService.createRent(rentCreateDTO);
+
+        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
+        assertEquals(endTime, newRent.getEndTime());
+
+        assertEquals(790, rentService.findRentById(newRent.getId()).getRentCost());
+        assertEquals(car.getId(), rentService.findRentById(newRent.getId()).getVehicleId());
+        assertEquals(client.getId(), rentService.findRentById(newRent.getId()).getClientId());
+        assertEquals(1, clientRepository.findById(client.getId()).getActiveRents());
+        assertTrue(vehicleRepository.findById(car.getId()).isRented());
+    }
+
+    @Test
+    void createRent_MaxVehiclesExceeded() {
+        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
+
+        vehicleRepository.save(car);
+        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
+        String email = "test23@test.com";
+        Silver silver = new Silver(UUID.randomUUID(), 12.0, 1);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
+
+        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
+
+        Rent newRent = rentService.createRent(rentCreateDTO);
+
+        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
+
+        Car car2 = new Car(UUID.randomUUID(),"AA1234", 200.0,3, Car.TransmissionType.MANUAL);
+        vehicleRepository.save(car2);
+        RentCreateDTO rent2CreateDTO = new RentCreateDTO(endTime, client.getId(), car2.getId());
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> rentService.createRent(rent2CreateDTO));
+        assertEquals("RentRepository: Client has max vehicles", runtimeException.getMessage());
+    }
+
+    @Test
+    void createRent_VehicleAlreadyRented() {
+        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
+
+        vehicleRepository.save(car);
+        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
+        String email = "test23@test.com";
+        Silver silver = new Silver(UUID.randomUUID(), 12.0, 2);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
+
+        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
+
+        Rent newRent = rentService.createRent(rentCreateDTO);
+
+        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
+
+        RentCreateDTO rent2CreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> rentService.createRent(rent2CreateDTO));
+        assertEquals("Change rent status failed", runtimeException.getMessage());
+    }
+
+    @Test
+    void updateRent() {
+        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
+
+        vehicleRepository.save(car);
+        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
+        String email = "test23@test.com";
+        Silver silver = new Silver(UUID.randomUUID(), 10.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+
+        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
+
+        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
+
+        Rent newRent = rentService.createRent(rentCreateDTO);
+        assertEquals(790, rentService.findRentById(newRent.getId()).getRentCost());
+        LocalDateTime newTime = endTime.plusHours(2);
+
+        Rent modifiedRent = rentService.updateRent(newRent.getId(), newTime);
+
+        assertEquals(newTime, modifiedRent.getEndTime());
+        assertEquals(990, rentService.findRentById(newRent.getId()).getRentCost());
+    }
+
+    @Test
+    void updateRent_Failure() {
+        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
+
+        vehicleRepository.save(car);
+        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
+        String email = "test23@test.com";
+        Silver silver = new Silver(UUID.randomUUID(), 10.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+        LocalDateTime endTime = LocalDateTime.now().plusHours(8);
+        RentCreateDTO rentCreateDTO = new RentCreateDTO(endTime, client.getId(), car.getId());
+        Rent newRent = rentService.createRent(rentCreateDTO);
+
+        LocalDateTime newTime = endTime.minusHours(1);
+
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> rentService.updateRent(newRent.getId(), newTime));
+        assertEquals("RentRepository: New Rent end time cannot be before current rent end time", runtimeException.getMessage());
+    }
+
+
+    @Test
+    void endRent() {
+        Car car = new Car(UUID.randomUUID(),"AA123", 100.0,3, Car.TransmissionType.MANUAL);
+        vehicleRepository.save(car);
+        assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
+        String email = "test@test.com";
+        Silver silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Client client = new Client(UUID.randomUUID(), "Piotrek", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+        RentCreateDTO rentCreateDTO = new RentCreateDTO(LocalDateTime.now().plusHours(10), client.getId(), car.getId());
+        Rent newRent = rentService.createRent(rentCreateDTO);
+
+        assertEquals(newRent.getId(), rentService.findRentById(newRent.getId()).getId());
+        assertEquals(car.getId(), rentService.findRentById(newRent.getId()).getVehicleId());
+        assertTrue(vehicleRepository.findById(car.getId()).isRented());
+        assertEquals(1, clientRepository.findById(client.getId()).getActiveRents());
+        rentService.endRent(newRent.getId());
+        assertEquals(1, rentRepository.findAllArchivedByVehicleId(newRent.getVehicleId()).size());
+        assertEquals(0, rentRepository.findAllActiveByVehicleId(newRent.getVehicleId()).size());
+        assertFalse(vehicleRepository.findById(car.getId()).isRented());
+        assertEquals(0, clientRepository.findById(client.getId()).getActiveRents());
+    }
+}

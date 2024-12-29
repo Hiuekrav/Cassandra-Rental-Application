@@ -1,5 +1,6 @@
 package org.example.dao;
 
+import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.mapper.annotations.*;
 import org.example.model.vehicle.Bicycle;
 import org.example.model.vehicle.Car;
@@ -42,6 +43,10 @@ public interface VehicleDao {
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
     List<Moped> findAllMoped();
+
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
+    @Select
+    PagingIterable<Vehicle> findAllVehicles();
 
     @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = VehicleOperationsProvider.class,

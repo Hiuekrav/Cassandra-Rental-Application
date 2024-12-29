@@ -8,6 +8,7 @@ import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.example.model.clientType.ClientType;
 import org.example.model.vehicle.Vehicle;
 import org.example.utils.consts.DatabaseConstants;
 
@@ -56,9 +57,9 @@ public class Rent extends AbstractEntity {
         this.rentCost = rentCost;
     }
 
-    //public void recalculateRentCost() {
-    //    this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - client.getClientTypeId().getDiscount();
-    //}
+    public void recalculateRentCost(Vehicle vehicle, Client client, ClientType clientType) {
+        this.rentCost = ChronoUnit.HOURS.between(beginTime, endTime.plusHours(1)) * vehicle.getBasePrice() - clientType.getDiscount();
+    }
 
 
     public Rent(UUID id, LocalDateTime endTime, Client client, Vehicle vehicle) {

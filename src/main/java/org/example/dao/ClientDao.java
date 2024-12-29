@@ -39,7 +39,11 @@ public interface ClientDao {
 
     @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
-    boolean increaseCurrentRentsNumber(UUID id, int number, int maxRents);
+    boolean increaseActiveRentsNumber(UUID id, int number, int maxRents);
+
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
+    @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
+    boolean decreaseActiveRentsNumber(UUID id, int number);
 
     @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)

@@ -1,7 +1,6 @@
 package org.example.repositories.implementations;
 
 import org.example.model.Client;
-import org.example.model.clientType.ClientType;
 import org.example.model.clientType.Gold;
 import org.example.model.clientType.Silver;
 import org.example.repositories.interfaces.IClientRepository;
@@ -10,7 +9,6 @@ import org.example.utils.consts.DatabaseConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -134,9 +132,9 @@ class ClientRepositoryTest {
         Client clientG = new Client(UUID.randomUUID(), "Jan", "Leszcz",
                 "c@org.com",gold.getId(), "Wawa", "Kwiatowa", "15");
         clientRepository.save(clientG);
-        assertEquals(0, clientRepository.findById(clientG.getId()).getCurrentRents());
+        assertEquals(0, clientRepository.findById(clientG.getId()).getActiveRents());
         clientRepository.increaseActiveRents(clientG.getId(), 1);
-        assertEquals(1, clientRepository.findById(clientG.getId()).getCurrentRents());
+        assertEquals(1, clientRepository.findById(clientG.getId()).getActiveRents());
     }
 
     @Test
@@ -146,9 +144,9 @@ class ClientRepositoryTest {
         Client clientG = new Client(UUID.randomUUID(), "Jan", "Leszcz",
                 "c@org.com",gold.getId(), "Wawa", "Kwiatowa", "15");
         clientRepository.save(clientG);
-        assertEquals(0, clientRepository.findById(clientG.getId()).getCurrentRents());
+        assertEquals(0, clientRepository.findById(clientG.getId()).getActiveRents());
         clientRepository.increaseActiveRents(clientG.getId(), 1);
-        assertEquals(1, clientRepository.findById(clientG.getId()).getCurrentRents());
+        assertEquals(1, clientRepository.findById(clientG.getId()).getActiveRents());
         assertThrows(RuntimeException.class, ()-> clientRepository.increaseActiveRents(clientG.getId(), 1));
 
     }
@@ -160,12 +158,12 @@ class ClientRepositoryTest {
         Client clientG = new Client(UUID.randomUUID(), "Jan", "Leszcz",
                 "c@org.com",gold.getId(), "Wawa", "Kwiatowa", "15");
         clientRepository.save(clientG);
-        assertEquals(0, clientRepository.findById(clientG.getId()).getCurrentRents());
+        assertEquals(0, clientRepository.findById(clientG.getId()).getActiveRents());
         clientRepository.increaseActiveRents(clientG.getId(), 1);
-        assertEquals(1, clientRepository.findById(clientG.getId()).getCurrentRents());
-        clientRepository.decreaseActiveRents(clientG.getId(), 1);
-        assertEquals(0, clientRepository.findById(clientG.getId()).getCurrentRents());
-        assertThrows(RuntimeException.class, ()-> clientRepository.decreaseActiveRents(clientG.getId(), 1));
+        assertEquals(1, clientRepository.findById(clientG.getId()).getActiveRents());
+        clientRepository.decreaseActiveRents(clientG.getId());
+        assertEquals(0, clientRepository.findById(clientG.getId()).getActiveRents());
+        assertThrows(RuntimeException.class, ()-> clientRepository.decreaseActiveRents(clientG.getId()));
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.datastax.oss.driver.api.mapper.annotations.*;
 import com.datastax.oss.driver.api.mapper.entity.saving.NullSavingStrategy;
 import lombok.experimental.SuperBuilder;
 import org.example.model.clientType.ClientType;
+import org.example.providers.ClientTypeProvider;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +18,7 @@ public interface ClientTypeDao {
     void create(ClientType clientType);
 
     @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
-    @Select
+    @QueryProvider(providerClass = ClientTypeProvider.class, entityHelpers = ClientType.class)
     ClientType findById(UUID id);
 
     @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
