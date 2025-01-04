@@ -13,7 +13,7 @@ services:
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandra1
       - CASSANDRA_BROADCAST_ADDRESS=cassandra1
-      - CASSANDRA_SEEDS=cassandra1,cassandra2
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
       - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
       - CASSANDRA_DATACENTER =dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
@@ -39,7 +39,33 @@ services:
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandra2
       - CASSANDRA_BROADCAST_ADDRESS=cassandra2
-      - CASSANDRA_SEEDS=cassandra1,cassandra2
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
+      - CASSANDRA_DATACENTER=dc1
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_USER = cassandra
+      - CASSANDRA_PASSWORD=cassandrapassword
+      - MAX_HEAP_SIZE=400M
+      - HEAP_NEWSIZE=4M
+    healthcheck:
+      test: [ "CMD-SHELL", "[ $$(nodetool statusgossip) = running ]" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  cassandra3:
+    image: docker.io/bitnami/cassandra:latest
+    hostname: cassandra3
+    ports:
+      - "7002:7000"
+      - "9044:9042"
+    networks:
+      cassandranet:
+        ipv4_address: 172.16.0.4
+    environment:
+      - CASSANDRA_LISTEN_ADDRESS=cassandra3
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra3
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
       - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
       - CASSANDRA_DATACENTER=dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
