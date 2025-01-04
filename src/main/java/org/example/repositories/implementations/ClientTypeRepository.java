@@ -21,7 +21,6 @@ public class ClientTypeRepository extends ObjectRepository implements IClientTyp
     private ClientTypeDao clientTypeDao;
 
     public ClientTypeRepository() {
-        super();
         SimpleStatement createTable = SchemaBuilder
                 .createTable(DatabaseConstants.CLIENT_TYPE_TABLE)
                 .ifNotExists()

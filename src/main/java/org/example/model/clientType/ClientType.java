@@ -10,12 +10,14 @@ import org.example.utils.consts.DatabaseConstants;
 
 import java.util.UUID;
 
+@Setter
+@Getter
 @Entity(defaultKeyspace = DatabaseConstants.RENT_A_CAR_NAMESPACE)
 @CqlName(DatabaseConstants.CLIENT_TYPE_TABLE)
 @PropertyStrategy(mutable = false)
 @NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 @SuperBuilder(toBuilder = true)
-@Getter @Setter
+
 public class ClientType extends AbstractEntity {
 
     @CqlName(DatabaseConstants.CLIENT_TYPE_DISCOUNT)
@@ -34,4 +36,5 @@ public class ClientType extends AbstractEntity {
         this.maxVehicles = maxVehicles;
         this.discriminator = discriminator;
     }
+
 }

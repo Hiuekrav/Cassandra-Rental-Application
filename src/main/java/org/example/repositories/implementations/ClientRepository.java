@@ -20,7 +20,6 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
 
 
     public ClientRepository() {
-        super();
         SimpleStatement createTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.ID, DataTypes.UUID)

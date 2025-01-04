@@ -3,16 +3,14 @@ package org.example.repositories.implementations;
 import org.example.model.vehicle.Bicycle;
 import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.utils.consts.DatabaseConstants;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class BicycleRepositoryTest {
 
     private final IVehicleRepository vehicleRepository = new VehicleRepository();

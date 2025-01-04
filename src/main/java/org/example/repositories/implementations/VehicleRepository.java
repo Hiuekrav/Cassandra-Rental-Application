@@ -1,5 +1,6 @@
 package org.example.repositories.implementations;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
@@ -12,6 +13,7 @@ import org.example.model.vehicle.Bicycle;
 import org.example.model.vehicle.Car;
 import org.example.model.vehicle.Moped;
 import org.example.model.vehicle.Vehicle;
+import org.example.repositories.ApplicationContext;
 import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.utils.consts.DatabaseConstants;
 
@@ -25,7 +27,6 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
    private final VehicleDao vehicleDao;
 
     public VehicleRepository() {
-        super();
         SimpleStatement createVehicleTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.ID, DataTypes.UUID)

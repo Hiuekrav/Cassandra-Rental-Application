@@ -8,11 +8,13 @@ import org.example.repositories.interfaces.IClientTypeRepository;
 import org.example.utils.consts.DatabaseConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ClientRepositoryTest {
 
     private final IClientRepository clientRepository = new ClientRepository();

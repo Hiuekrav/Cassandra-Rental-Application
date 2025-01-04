@@ -21,7 +21,6 @@ public class RentRepository extends ObjectRepository implements IRentRepository 
     RentDao rentDao;
 
     public RentRepository() {
-        super();
 
         SimpleStatement createRentsTable = SchemaBuilder
                 .createTable(DatabaseConstants.RENT_TABLE)

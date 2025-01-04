@@ -6,6 +6,7 @@ import com.datastax.oss.driver.api.querybuilder.schema.CreateKeyspace;
 import lombok.Getter;
 import org.example.codecs.LocalDateTimeCodec;
 import org.example.codecs.TransmissionTypeCodec;
+import org.example.repositories.ApplicationContext;
 import org.example.utils.consts.DatabaseConstants;
 
 import java.net.InetSocketAddress;
@@ -16,33 +17,9 @@ import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createKeysp
 @Getter
 public abstract class ObjectRepository {
 
-    private CqlSession session;
+    public ObjectRepository() {}
 
-    public ObjectRepository() {
-        this.session = CqlSession.builder( )
-                .addContactPoint(new InetSocketAddress("cassandra1", 9042))
-                .addContactPoint(new InetSocketAddress("cassandra2", 9043))
-                .withLocalDatacenter("dc1")
-                .withAuthCredentials("cassandra", "cassandrapassword")
-                .build();
-
-
-        CreateKeyspace keyspace = createKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
-                .ifNotExists()
-                .withSimpleStrategy(2)
-                .withDurableWrites(true);
-        SimpleStatement createKeyspace = keyspace.build();
-        session.execute(createKeyspace);
-        session.close();
-
-        this.session = CqlSession.builder( )
-                .addContactPoint(new InetSocketAddress("cassandra1", 9042))
-                .addContactPoint(new InetSocketAddress("cassandra2", 9043))
-                .withLocalDatacenter("dc1")
-                .withAuthCredentials("cassandra", "cassandrapassword")
-                .withKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
-                .addTypeCodecs(new TransmissionTypeCodec())
-                .addTypeCodecs(new LocalDateTimeCodec())
-                .build();
+    public CqlSession getSession() {
+        return ApplicationContext.getSession();
     }
 }

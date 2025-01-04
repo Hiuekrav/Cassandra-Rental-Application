@@ -11,12 +11,14 @@ import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.services.interfaces.IClientService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ClientServiceTest {
 
     IClientService clientService = new ClientService() ;

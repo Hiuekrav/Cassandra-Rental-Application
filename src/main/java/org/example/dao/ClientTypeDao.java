@@ -21,7 +21,7 @@ public interface ClientTypeDao {
     @QueryProvider(providerClass = ClientTypeProvider.class, entityHelpers = ClientType.class)
     ClientType findById(UUID id);
 
-    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
     @Select
     PagingIterable<ClientType> findAll();
 

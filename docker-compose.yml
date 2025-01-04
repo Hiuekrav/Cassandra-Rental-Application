@@ -20,8 +20,8 @@ services:
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_USER = cassandra
       - CASSANDRA_PASSWORD=cassandrapassword
-      - MAX_HEAP_SIZE=200M
-      - HEAP_NEWSIZE=2M
+      - MAX_HEAP_SIZE=400M
+      - HEAP_NEWSIZE=4M
     healthcheck:
       test: [ "CMD-SHELL", "[ $$(nodetool statusgossip) = running ]" ]
       interval: 30s
@@ -46,8 +46,8 @@ services:
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - CASSANDRA_USER = cassandra
       - CASSANDRA_PASSWORD=cassandrapassword
-      - MAX_HEAP_SIZE=200M
-      - HEAP_NEWSIZE=2M
+      - MAX_HEAP_SIZE=400M
+      - HEAP_NEWSIZE=4M
     healthcheck:
       test: [ "CMD-SHELL", "[ $$(nodetool statusgossip) = running ]" ]
       interval: 30s

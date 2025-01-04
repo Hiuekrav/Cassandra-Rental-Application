@@ -25,11 +25,11 @@ public interface ClientDao {
     @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
     Client findByEmail(String email);
 
-    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
     @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
     List<UUID> findByType(String type);
 
-    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
     @Select
     PagingIterable<Client> findAll();
 

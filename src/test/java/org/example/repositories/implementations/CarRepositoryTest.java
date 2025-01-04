@@ -14,6 +14,7 @@ import java.util.UUID;
 import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createKeyspace;
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CarRepositoryTest {
 
     private final IVehicleRepository vehicleRepository = new VehicleRepository();

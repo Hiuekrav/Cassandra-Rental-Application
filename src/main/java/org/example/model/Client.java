@@ -7,6 +7,7 @@ import com.datastax.oss.driver.api.mapper.annotations.PropertyStrategy;
 import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Value;
 import lombok.experimental.SuperBuilder;
 import org.example.utils.consts.DatabaseConstants;
 
