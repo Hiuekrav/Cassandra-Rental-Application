@@ -43,6 +43,11 @@ public class VehicleOperationsProvider {
         SimpleStatement insertPlateNumber = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(vehicle.getPlateNumber()))
                 .value(DatabaseConstants.ID, literal(vehicle.getId()))
+                .value(DatabaseConstants.VEHICLE_DISCRIMINATOR, literal(vehicle.getDiscriminator()))
+                .value(DatabaseConstants.VEHICLE_VERSION, literal(vehicle.getVersion()))
+                .value(DatabaseConstants.VEHICLE_ARCHIVE, literal(vehicle.isArchive()))
+                .value(DatabaseConstants.VEHICLE_RENTED, literal(vehicle.isRented()))
+                .value(DatabaseConstants.VEHICLE_BASE_PRICE, literal(vehicle.getBasePrice()))
                 .ifNotExists()
                 .build();
 
@@ -50,11 +55,18 @@ public class VehicleOperationsProvider {
         if (!success) {
             throw new RuntimeException("Vehicle plate number " + vehicle.getPlateNumber() + " already exists");
         }
+
+
         session.execute(
                 switch (vehicle.getDiscriminator()) {
                     case DatabaseConstants.BICYCLE_DISCRIMINATOR -> {
                         Bicycle bicycle = (Bicycle) vehicle;
-                        yield session.prepare(bicycleEntityHelper.insert().build())
+
+                        SimpleStatement insertValues = QueryBuilder.update(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                                .setColumn(DatabaseConstants.BICYCLE_PEDAL_NUMBER, literal(bicycle.getPedalsNumber()))
+                                .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(bicycle.getPlateNumber())))
+                                .build();
+                        BoundStatement insertBicycle = session.prepare(bicycleEntityHelper.insert().build())
                                 .bind()
                                 .setUuid(DatabaseConstants.ID, bicycle.getId())
                                 .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, bicycle.getDiscriminator())
@@ -63,11 +75,23 @@ public class VehicleOperationsProvider {
                                 .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, bicycle.isArchive())
                                 .setInt(DatabaseConstants.VEHICLE_VERSION, bicycle.getVersion())
                                 .setInt(DatabaseConstants.BICYCLE_PEDAL_NUMBER, bicycle.getPedalsNumber());
+
+                        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.LOGGED)
+                                .addStatements(insertValues, insertBicycle);
+
+                        yield batchStatementBuilder.build();
                     }
 
                     case DatabaseConstants.CAR_DISCRIMINATOR -> {
                         Car car = (Car) vehicle;
-                        yield session.prepare(carEntityHelper.insert().build())
+
+                        SimpleStatement insertValues = QueryBuilder.update(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                                .setColumn(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(car.getEngineDisplacement()))
+                                .setColumn(DatabaseConstants.CAR_TRANSMISSION_TYPE, literal(car.getTransmissionType().toString()))
+                                .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(car.getPlateNumber())))
+                                .build();
+
+                        BoundStatement insertCar = session.prepare(carEntityHelper.insert().build())
                                 .bind()
                                 .setUuid(DatabaseConstants.ID, car.getId())
                                 .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, car.getDiscriminator())
@@ -77,10 +101,20 @@ public class VehicleOperationsProvider {
                                 .setInt(DatabaseConstants.VEHICLE_VERSION, car.getVersion())
                                 .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, car.getEngineDisplacement())
                                 .setString(DatabaseConstants.CAR_TRANSMISSION_TYPE, car.getTransmissionType().toString());
+
+                        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.LOGGED)
+                                .addStatements(insertValues, insertCar);
+
+                        yield batchStatementBuilder.build();
                     }
                     case DatabaseConstants.MOPED_DISCRIMINATOR -> {
                         Moped moped = (Moped) vehicle;
-                        yield session.prepare(mopedEntityHelper.insert().build())
+
+                        SimpleStatement insertValues = QueryBuilder.update(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                                .setColumn(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(moped.getEngineDisplacement()))
+                                .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(moped.getPlateNumber())))
+                                .build();
+                        BoundStatement insertMoped = session.prepare(mopedEntityHelper.insert().build())
                                 .bind()
                                 .setUuid(DatabaseConstants.ID, moped.getId())
                                 .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, moped.getDiscriminator())
@@ -89,6 +123,11 @@ public class VehicleOperationsProvider {
                                 .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, moped.isArchive())
                                 .setInt(DatabaseConstants.VEHICLE_VERSION, moped.getVersion())
                                 .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, moped.getEngineDisplacement());
+
+                        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.LOGGED)
+                                .addStatements(insertValues, insertMoped);
+
+                        yield batchStatementBuilder.build();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + vehicle.getDiscriminator());
                 }
@@ -143,8 +182,6 @@ public class VehicleOperationsProvider {
                 .all()
                 .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
                 .isEqualTo(literal(DatabaseConstants.CAR_DISCRIMINATOR)));
-        /* acceptable use case of allowFiltering as it scans only single node instead of all nodes,
-         because of searching by clustering column: https://www.baeldung.com/cassandra-secondary-indexes */
         List<Row> rows = session.execute(findVehicles.build()).all();
         return rows.stream().map(this::getCar).toList();
     }
@@ -216,7 +253,7 @@ public class VehicleOperationsProvider {
         }
     }
 
-
+    //todo refactor so it performs updates on 2 tables
     public boolean update(Integer version, Vehicle vehicle) {
         List<Field> fields = new ArrayList<>();
         getAllFields(fields, vehicle.getClass());
@@ -229,7 +266,9 @@ public class VehicleOperationsProvider {
                                 && field.getAnnotation(PartitionKey.class)==null
                                 && field.getAnnotation(ClusteringColumn.class)==null
                                 && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_RENTED)
-                                && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_VERSION);
+                                && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_VERSION)
+
+                                && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_PLATE_NUMBER);
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
                     }
@@ -259,6 +298,8 @@ public class VehicleOperationsProvider {
                         .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
                                 .isEqualTo(literal(vehicle.getDiscriminator())))
                         .ifColumn(DatabaseConstants.VEHICLE_VERSION).isEqualTo(literal(version));
+
+                //todo create second update for plate number table, execute in batch
 
                 fields.get(i).setAccessible(false);
                 updates.addStatement(update.build());

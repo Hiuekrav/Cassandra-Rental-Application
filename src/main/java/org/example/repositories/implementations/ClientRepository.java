@@ -39,11 +39,18 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.CLIENT_EMAIL, DataTypes.TEXT)
                 .withColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.CLIENT_FIRST_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_LAST_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_CITY_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_STREET_NAME, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_STREET_NUMBER, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.CLIENT_ACTIVE_RENTS, DataTypes.INT)
+                .withColumn(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, DataTypes.UUID)
                 .build();
 
         getSession().execute(createEmailTable);
 
-        SimpleStatement createClientTypeTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
+        SimpleStatement createClientTypeTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR, DataTypes.TEXT)
                 .withClusteringColumn(DatabaseConstants.ID, DataTypes.UUID)
@@ -110,10 +117,11 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
         return findById(obj.getId());
     }
 
+    @Override
     public void changeClientEmail(UUID id, String email) {
         Client foundClient = clientDao.findById(id);
         if (!clientDao.changeClientEmail(foundClient, email)) {
-            throw new RuntimeException("Email change failed!");
+            throw new RuntimeException("Email already taken!");
         }
     }
 
@@ -127,14 +135,16 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
 
     @Override
     public void deleteById(UUID id) {
-        clientDao.delete(findById(id));
+        if (!clientDao.delete(findById(id))) {
+            throw new RuntimeException("Client " + id + " deletion failed!");
+        }
     }
 
     @Override
     public void deleteAll() {
         SimpleStatement clientTable = QueryBuilder.truncate(DatabaseConstants.CLIENT_TABLE).build();
         SimpleStatement clientEmail = QueryBuilder.truncate(DatabaseConstants.CLIENT_BY_EMAIL_TABLE).build();
-        SimpleStatement clientType = QueryBuilder.truncate(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE).build();
+        SimpleStatement clientType = QueryBuilder.truncate(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE).build();
         getSession().execute(clientTable);
         getSession().execute(clientEmail);
         getSession().execute(clientType);

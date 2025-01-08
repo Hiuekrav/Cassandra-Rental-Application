@@ -86,6 +86,27 @@ class CarRepositoryTest {
     }
 
     @Test
+    void updateCar_EditPlateNumber() {
+        Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
+        vehicleRepository.save(car);
+        Double newPrice = 200.0;
+        Car.TransmissionType newTransmissionType = Car.TransmissionType.AUTOMATIC;
+        String newPlateNumber = "AA1234";
+        Car modifiedCar = Car.builder()
+                .basePrice(newPrice)
+                .id(car.getId())
+                .plateNumber(newPlateNumber)
+                .discriminator(DatabaseConstants.CAR_DISCRIMINATOR)
+                .transmissionType(newTransmissionType).build();
+        vehicleRepository.save(modifiedCar);
+        assertEquals(newPrice, vehicleRepository.findById(car.getId()).getBasePrice());
+        Car fromIdTable = (Car) vehicleRepository.findById(car.getId());
+        Car fromPlateNumberTable = (Car) vehicleRepository.findByPlateNumber(car.getPlateNumber());
+        assertEquals(newPlateNumber, fromIdTable.getPlateNumber());
+        assertEquals(car.getId(), fromPlateNumberTable.getId());
+    }
+
+    @Test
     void updateCar_OptimisticLockException() {
         Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
         Vehicle foundVehicle = vehicleRepository.save(car);

@@ -112,6 +112,38 @@ class ClientRepositoryTest {
 
     }
 
+    @Test
+    void updateClient_ChangeClientEmail() {
+        String email = "test@test.com";
+        String newEmail = "new@mail.com";
+        Silver silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Gold gold = new Gold(UUID.randomUUID(), 20.0, 10);
+        clientTypeRepository.save(gold);
+        UUID clientId = UUID.randomUUID();
+        Client client = new Client(clientId, "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+        clientRepository.changeClientEmail(clientId, newEmail);
+        assertEquals(newEmail, clientRepository.findById(client.getId()).getEmail());
+        assertEquals(clientId, clientRepository.findByEmail(newEmail).getId());
+    }
+
+    @Test
+    void updateClient_ChangeClientEmail_EmailAlreadyTakenException() {
+        String email = "test@test.com";;
+        Silver silver = new Silver(UUID.randomUUID(), 12.0, 5);
+        clientTypeRepository.save(silver);
+        Gold gold = new Gold(UUID.randomUUID(), 20.0, 10);
+        clientTypeRepository.save(gold);
+        UUID clientId = UUID.randomUUID();
+        Client client = new Client(clientId, "Jan", "Leszcz",
+                email, silver.getId(), "Wawa", "Kwiatowa", "15");
+        clientRepository.save(client);
+        assertThrows(RuntimeException.class, ()-> clientRepository.changeClientEmail(clientId, email));
+
+    }
+
 
 
     @Test
@@ -125,6 +157,7 @@ class ClientRepositoryTest {
         assertEquals(1, clientRepository.findAll().size());
         clientRepository.deleteById(client.getId());
         assertEquals(0, clientRepository.findAll().size());
+        assertEquals(0, clientRepository.findByType(DatabaseConstants.CLIENT_TYPE_SILVER_DISCRIMINATOR).size());
     }
 
     @Test

@@ -47,7 +47,7 @@ public class ClientService implements IClientService, IObjectService {
                 UUID.randomUUID(),
                 createDTO.firstName(),
                 createDTO.lastName(),
-                createDTO.email(),
+                null,
                 createDTO.clientTypeId(),
                 createDTO.cityName(),
                 createDTO.streetName(),
@@ -78,16 +78,19 @@ public class ClientService implements IClientService, IObjectService {
                 .id(updateDTO.id())
                 .firstName(updateDTO.firstName())
                 .lastName(updateDTO.lastName())
-                .email(updateDTO.email())
-                .clientTypeId(updateDTO.clientTypeId())
                 .cityName(updateDTO.cityName())
                 .streetName(updateDTO.streetName())
                 .streetNumber(updateDTO.streetNumber())
                 .build();
         clientRepository.findById(modifiedClient.getId());
         if (updateDTO.clientTypeId() != null) {
-            clientTypeRepository.findById(updateDTO.clientTypeId());
+            ClientType clientType = clientTypeRepository.findById(updateDTO.clientTypeId());
+            clientRepository.changeClientType(updateDTO.id(), clientType);
         }
+        if (updateDTO.email() != null) {
+            clientRepository.changeClientEmail(updateDTO.id(), updateDTO.email());
+        }
+
         clientRepository.save(modifiedClient);
     }
 

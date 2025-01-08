@@ -42,12 +42,21 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
                 .build();
 
         getSession().execute(createVehicleTable);
-
         // Create index table for plate_number, to guarantee its uniqueness
+        //todo refactor: insert all vehicle fields into this table (uncomment)
+
         SimpleStatement createPlateNumberTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.VEHICLE_PLATE_NUMBER, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.VEHICLE_DISCRIMINATOR, DataTypes.TEXT)
                 .withColumn(DatabaseConstants.ID, DataTypes.UUID)
+                .withColumn(DatabaseConstants.VEHICLE_BASE_PRICE, DataTypes.DOUBLE)
+                .withColumn(DatabaseConstants.VEHICLE_RENTED, DataTypes.BOOLEAN)
+                .withColumn(DatabaseConstants.VEHICLE_ARCHIVE, DataTypes.BOOLEAN)
+                .withColumn(DatabaseConstants.BICYCLE_PEDAL_NUMBER, DataTypes.INT)
+                .withColumn(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, DataTypes.INT)
+                .withColumn(DatabaseConstants.CAR_TRANSMISSION_TYPE, DataTypes.TEXT)
+                .withColumn(DatabaseConstants.VEHICLE_VERSION, DataTypes.INT)
                 .build();
 
         getSession().execute(createPlateNumberTable);
@@ -69,7 +78,6 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
         //
         //getSession().execute(createDiscriminatorTable);
 
-        // Nie panikuj, intellij nie wykrywa tej wygenerowanej klasy z folderu target, ale działa!
         vehicleDao = new VehicleMapperBuilder(getSession()).build().getVehicleDao(DatabaseConstants.RENT_A_CAR_NAMESPACE,
                 DatabaseConstants.VEHICLE_TABLE);
     }

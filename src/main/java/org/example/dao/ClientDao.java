@@ -55,6 +55,6 @@ public interface ClientDao {
     boolean changeClientEmail(Client client, String newEmail);
 
     @StatementAttributes(consistencyLevel = "QUORUM")
-    @Delete
-    void delete(Client client);
+    @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
+    boolean delete(Client client);
 }

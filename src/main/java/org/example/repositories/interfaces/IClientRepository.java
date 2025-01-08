@@ -18,5 +18,7 @@ public interface IClientRepository extends IObjectRepository<Client> {
 
     List<Client> findAll();
 
+    void changeClientEmail(UUID id, String email);
+
     void changeClientType(UUID id, ClientType type);
 }

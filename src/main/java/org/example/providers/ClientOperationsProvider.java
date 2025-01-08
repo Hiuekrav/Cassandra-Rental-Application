@@ -73,7 +73,7 @@ public class ClientOperationsProvider {
 
         // assign created client to corresponding type
         SimpleStatement insertClientType = QueryBuilder
-                .insertInto(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
+                .insertInto(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
                 .value(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR, literal(clientType))
                 .value(DatabaseConstants.ID, literal(client.getId()))
                 .build();
@@ -85,25 +85,20 @@ public class ClientOperationsProvider {
     }
 
     public Client findByEmail(String email) {
-        SimpleStatement findEmail = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_BY_EMAIL_TABLE)
-                .all().where(Relation.column(DatabaseConstants.CLIENT_EMAIL).isEqualTo(literal(email))).build();
-        Row foundEmail = session.execute(findEmail).one();
-        if (foundEmail == null) {
-            throw new RuntimeException("No client found for email: " + email);
-        }
-
-        SimpleStatement findClient = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_TABLE)
+        SimpleStatement findClient = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_BY_EMAIL_TABLE)
                 .all()
-                .where(Relation.column(DatabaseConstants.ID)
-                .isEqualTo(literal(foundEmail.getUuid(DatabaseConstants.ID))))
+                .where(Relation.column(DatabaseConstants.CLIENT_EMAIL).isEqualTo(literal(email)))
                 .build();
 
         Row foundClient = session.execute(findClient).one();
+        if (foundClient == null) {
+            throw new RuntimeException("No client found for email: " + email);
+        }
         return toClient(foundClient);
     }
 
     public List<UUID> findByType(String type) {
-        SimpleStatement findByType = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
+        SimpleStatement findByType = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
                 .column(DatabaseConstants.ID)
                 .where(Relation.column(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR)
                 .isEqualTo(literal(type))).build();
@@ -139,25 +134,40 @@ public class ClientOperationsProvider {
 
     public boolean changeClientEmail(Client client, String newEmail) {
 
-        // Update email in main client table
-        SimpleStatement updateClientEmail = QueryBuilder.update(DatabaseConstants.CLIENT_TABLE)
-                .setColumn(DatabaseConstants.CLIENT_EMAIL, literal(newEmail))
-                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client))).build();
-
-        //delete row in table used for searching by email (you can't modify primary key)
-        SimpleStatement deleteClientEmailRow = QueryBuilder
-                .deleteFrom(DatabaseConstants.CLIENT_BY_EMAIL_TABLE)
-                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getId())))
-                .build();
-
         // insert row with new email
         SimpleStatement insertClientEmailRow = QueryBuilder.insertInto(DatabaseConstants.CLIENT_BY_EMAIL_TABLE)
                 .value(DatabaseConstants.CLIENT_EMAIL, literal(newEmail))
                 .value(DatabaseConstants.ID, literal(client.getId()))
+                .value(DatabaseConstants.CLIENT_FIRST_NAME, literal(client.getFirstName()))
+                .value(DatabaseConstants.CLIENT_LAST_NAME, literal(client.getLastName()))
+                .value(DatabaseConstants.CLIENT_STREET_NAME, literal(client.getStreetName()))
+                .value(DatabaseConstants.CLIENT_STREET_NUMBER, literal(client.getStreetNumber()))
+                .value(DatabaseConstants.CLIENT_CITY_NAME, literal(client.getCityName()))
+                .value(DatabaseConstants.CLIENT_CLIENT_TYPE_ID, literal(client.getClientTypeId()))
+                .value(DatabaseConstants.CLIENT_ACTIVE_RENTS, literal(client.getActiveRents()))
+                .ifNotExists()
+                .build();
+        boolean result = session.execute(insertClientEmailRow).wasApplied();
+
+        if (!result) {
+            return false;
+        }
+
+        //delete row in table used for searching by email (you can't modify primary key)
+        SimpleStatement deleteClientEmailRow = QueryBuilder
+                .deleteFrom(DatabaseConstants.CLIENT_BY_EMAIL_TABLE)
+                .where(Relation.column(DatabaseConstants.CLIENT_EMAIL).isEqualTo(literal(client.getEmail())))
+                .build();
+
+        // Update email in main client table
+        SimpleStatement updateClientEmail = QueryBuilder.update(DatabaseConstants.CLIENT_TABLE)
+                .setColumn(DatabaseConstants.CLIENT_EMAIL, literal(newEmail))
+                .where(Relation.column(DatabaseConstants.ID)
+                        .isEqualTo(literal(client.getId())))
                 .build();
 
         BatchStatement batchStatement = BatchStatement.builder(BatchType.LOGGED)
-                .addStatements(updateClientEmail, deleteClientEmailRow, insertClientEmailRow)
+                .addStatements(updateClientEmail, deleteClientEmailRow)
                 .build();
         return session.execute(batchStatement).wasApplied();
     }
@@ -178,18 +188,46 @@ public class ClientOperationsProvider {
         String oldType = foundOldType.getString(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR);
 
         // update client type discriminator in table used for searching clients by type
-        SimpleStatement deleteTypeRow = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
+        SimpleStatement deleteTypeRow = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
                 .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getId())))
                 .where(Relation.column(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR).isEqualTo(literal(oldType)))
                 .build();
 
-        SimpleStatement insertTypeRow = QueryBuilder.insertInto(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
+        SimpleStatement insertTypeRow = QueryBuilder.insertInto(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
                 .value(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR, literal(newClientType.getDiscriminator()))
                 .value(DatabaseConstants.ID, literal(client.getId()))
                 .build();
 
         BatchStatement batchStatement = BatchStatement.builder(BatchType.LOGGED)
                 .addStatements(updateClientTypeId, deleteTypeRow, insertTypeRow).build();
+        return session.execute(batchStatement).wasApplied();
+    }
+
+
+    public boolean delete(Client client) {
+        SimpleStatement deleteClient = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_TABLE)
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getId())))
+                .build();
+        SimpleStatement deleteEmail = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_BY_EMAIL_TABLE)
+                .where(Relation.column(DatabaseConstants.CLIENT_EMAIL).isEqualTo(literal(client.getEmail())))
+                .build();
+
+        SimpleStatement findType = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_TYPE_TABLE)
+                .column(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR)
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getClientTypeId())))
+                .build();
+
+        Row foundType = session.execute(findType).one();
+        String type = foundType.getString(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR);
+
+
+        SimpleStatement deleteType = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
+                .where(Relation.column(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR).isEqualTo(literal(type)))
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getId())))
+                .build();
+
+        BatchStatement batchStatement = BatchStatement.builder(BatchType.LOGGED)
+                .addStatements(deleteClient, deleteEmail, deleteType).build();
         return session.execute(batchStatement).wasApplied();
     }
 
