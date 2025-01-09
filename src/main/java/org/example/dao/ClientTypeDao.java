@@ -17,11 +17,11 @@ public interface ClientTypeDao {
     @Insert
     void create(ClientType clientType);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = ClientTypeProvider.class, entityHelpers = ClientType.class)
     ClientType findById(UUID id);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @Select
     PagingIterable<ClientType> findAll();
 

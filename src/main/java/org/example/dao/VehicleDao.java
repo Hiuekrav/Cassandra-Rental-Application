@@ -21,32 +21,32 @@ public interface VehicleDao {
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
     void create(Vehicle vehicle);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
     entityHelpers = {Bicycle.class, Car.class, Moped.class})
     Vehicle findById(UUID id);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
     Vehicle findByPlateNumber(String plateNumber);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
     List<Car> findAllCars();
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
     List<Bicycle> findAllBicycles();
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
     List<Moped> findAllMoped();
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @Select
     PagingIterable<Vehicle> findAllVehicles();
 

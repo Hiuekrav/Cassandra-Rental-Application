@@ -17,19 +17,19 @@ public interface RentDao {
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     boolean create(Rent rent);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @Select
     Rent findById(UUID id);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @Select
     PagingIterable<Rent> findAll();
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     Rent findActiveById(UUID id);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     Rent findArchivedById(UUID id);
 
@@ -37,15 +37,15 @@ public interface RentDao {
     /* By vehicle */
     /*------------*/
 
-    @StatementAttributes(consistencyLevel = "ONE")
+    @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     List<Rent> findAllActiveByVehicleId(UUID vehicleId);
 
-    @StatementAttributes(consistencyLevel = "ONE")
+    @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     List<Rent> findAllArchivedByVehicleId(UUID vehicleId);
 
-    @StatementAttributes(consistencyLevel = "ONE")
+    @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     List<Rent> findAllByVehicleId(UUID vehicleId);
 
@@ -53,15 +53,15 @@ public interface RentDao {
     /* By client */
     /*-----------*/
 
-    @StatementAttributes(consistencyLevel = "ONE")
+    @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     List<Rent> findAllActiveByClientId(UUID clientId);
 
-    @StatementAttributes(consistencyLevel = "ONE")
+    @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     List<Rent> findAllArchivedByClientId(UUID clientId);
 
-    @StatementAttributes(consistencyLevel = "ONE")
+    @StatementAttributes(consistencyLevel = "QUORUM")
     @QueryProvider(providerClass = RentOperationsProvider.class, entityHelpers = Rent.class)
     List<Rent> findAllByClientId(UUID clientId);
 

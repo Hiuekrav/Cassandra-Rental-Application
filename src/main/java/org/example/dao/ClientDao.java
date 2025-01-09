@@ -17,19 +17,19 @@ public interface ClientDao {
     @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
     boolean create(Client client);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @Select
     Client findById(UUID id);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 1)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
     @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
     Client findByEmail(String email);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @QueryProvider(providerClass = ClientOperationsProvider.class, entityHelpers = Client.class)
     List<UUID> findByType(String type);
 
-    @StatementAttributes(consistencyLevel = "ONE", pageSize = 100)
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 100)
     @Select
     PagingIterable<Client> findAll();
 
