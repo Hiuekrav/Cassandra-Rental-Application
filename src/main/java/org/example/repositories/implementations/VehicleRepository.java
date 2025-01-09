@@ -40,8 +40,8 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
                 .build();
 
         getSession().execute(createVehicleTable);
+
         // Create index table for plate_number, to guarantee its uniqueness
-        //todo refactor: insert all vehicle fields into this table (uncomment)
 
         SimpleStatement createPlateNumberTable = SchemaBuilder.createTable(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .ifNotExists()
@@ -59,7 +59,6 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
 
         getSession().execute(createPlateNumberTable);
 
-        //todo create separate table for better performance?
         SimpleStatement createDiscriminatorIndex = SchemaBuilder.createIndex(DatabaseConstants.VEHICLE_DISCRIMINATOR_INDEX)
                 .ifNotExists()
                 .onTable(DatabaseConstants.VEHICLE_TABLE)

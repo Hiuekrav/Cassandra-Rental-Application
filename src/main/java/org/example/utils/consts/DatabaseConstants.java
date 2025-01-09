@@ -55,7 +55,7 @@ public class DatabaseConstants {
 
     public static final String CLIENT_TABLE = "client";
     public static final String CLIENT_BY_EMAIL_TABLE = "client_by_email";
-    public static final String CLIENT_CLIENT_TYPE_TABLE = "client_by_client_type";
+    public static final String CLIENT_BY_CLIENT_TYPE_TABLE = "client_by_client_type";
     public static final String CLIENT_ACTIVE_RENTS = "active_rents";
     public static final String CLIENT_FIRST_NAME = "first_name";
 

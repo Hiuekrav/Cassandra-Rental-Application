@@ -73,7 +73,7 @@ public class ClientOperationsProvider {
 
         // assign created client to corresponding type
         SimpleStatement insertClientType = QueryBuilder
-                .insertInto(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
+                .insertInto(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
                 .value(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR, literal(clientType))
                 .value(DatabaseConstants.ID, literal(client.getId()))
                 .build();
@@ -98,7 +98,7 @@ public class ClientOperationsProvider {
     }
 
     public List<UUID> findByType(String type) {
-        SimpleStatement findByType = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
+        SimpleStatement findByType = QueryBuilder.selectFrom(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
                 .column(DatabaseConstants.ID)
                 .where(Relation.column(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR)
                 .isEqualTo(literal(type))).build();
@@ -187,12 +187,12 @@ public class ClientOperationsProvider {
         String oldType = foundOldType.getString(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR);
 
         // update client type discriminator in table used for searching clients by type
-        SimpleStatement deleteTypeRow = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
+        SimpleStatement deleteTypeRow = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
                 .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getId())))
                 .where(Relation.column(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR).isEqualTo(literal(oldType)))
                 .build();
 
-        SimpleStatement insertTypeRow = QueryBuilder.insertInto(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
+        SimpleStatement insertTypeRow = QueryBuilder.insertInto(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
                 .value(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR, literal(newClientType.getDiscriminator()))
                 .value(DatabaseConstants.ID, literal(client.getId()))
                 .build();
@@ -220,7 +220,7 @@ public class ClientOperationsProvider {
         String type = foundType.getString(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR);
 
 
-        SimpleStatement deleteType = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
+        SimpleStatement deleteType = QueryBuilder.deleteFrom(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
                 .where(Relation.column(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR).isEqualTo(literal(type)))
                 .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(client.getId())))
                 .build();

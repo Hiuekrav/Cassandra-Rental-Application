@@ -47,7 +47,7 @@ public class ClientService implements IClientService, IObjectService {
                 UUID.randomUUID(),
                 createDTO.firstName(),
                 createDTO.lastName(),
-                null,
+                createDTO.email(),
                 createDTO.clientTypeId(),
                 createDTO.cityName(),
                 createDTO.streetName(),

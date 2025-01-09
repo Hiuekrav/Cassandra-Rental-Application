@@ -50,7 +50,7 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
 
         getSession().execute(createEmailTable);
 
-        SimpleStatement createClientTypeTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE)
+        SimpleStatement createClientTypeTable = SchemaBuilder.createTable(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE)
                 .ifNotExists()
                 .withPartitionKey(DatabaseConstants.CLIENT_TYPE_DISCRIMINATOR, DataTypes.TEXT)
                 .withClusteringColumn(DatabaseConstants.ID, DataTypes.UUID)
@@ -144,7 +144,7 @@ public class ClientRepository extends ObjectRepository implements IClientReposit
     public void deleteAll() {
         SimpleStatement clientTable = QueryBuilder.truncate(DatabaseConstants.CLIENT_TABLE).build();
         SimpleStatement clientEmail = QueryBuilder.truncate(DatabaseConstants.CLIENT_BY_EMAIL_TABLE).build();
-        SimpleStatement clientType = QueryBuilder.truncate(DatabaseConstants.CLIENT_CLIENT_TYPE_TABLE).build();
+        SimpleStatement clientType = QueryBuilder.truncate(DatabaseConstants.CLIENT_BY_CLIENT_TYPE_TABLE).build();
         getSession().execute(clientTable);
         getSession().execute(clientEmail);
         getSession().execute(clientType);

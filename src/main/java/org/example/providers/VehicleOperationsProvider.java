@@ -9,6 +9,7 @@ import com.datastax.oss.driver.api.mapper.annotations.CqlName;
 import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 import com.datastax.oss.driver.api.mapper.entity.EntityHelper;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
 import com.datastax.oss.driver.api.querybuilder.relation.Relation;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.api.querybuilder.update.Update;
@@ -40,6 +41,7 @@ public class VehicleOperationsProvider {
 
     public void create(Vehicle vehicle) {
 
+        // insert to plate number table
         SimpleStatement insertPlateNumber = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(vehicle.getPlateNumber()))
                 .value(DatabaseConstants.ID, literal(vehicle.getId()))
@@ -56,8 +58,17 @@ public class VehicleOperationsProvider {
             throw new RuntimeException("Vehicle plate number " + vehicle.getPlateNumber() + " already exists");
         }
 
+        RegularInsert insertVehicleTableBuilder = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_TABLE)
+                .value(DatabaseConstants.ID, literal(vehicle.getId()))
+                .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(vehicle.getPlateNumber()))
+                .value(DatabaseConstants.VEHICLE_DISCRIMINATOR, literal(vehicle.getDiscriminator()))
+                .value(DatabaseConstants.VEHICLE_VERSION, literal(vehicle.getVersion()))
+                .value(DatabaseConstants.VEHICLE_ARCHIVE, literal(vehicle.isArchive()))
+                .value(DatabaseConstants.VEHICLE_RENTED, literal(vehicle.isRented()))
+                .value(DatabaseConstants.VEHICLE_BASE_PRICE, literal(vehicle.getBasePrice()));
 
-        session.execute(
+
+        ResultSet resultSet = session.execute(
                 switch (vehicle.getDiscriminator()) {
                     case DatabaseConstants.BICYCLE_DISCRIMINATOR -> {
                         Bicycle bicycle = (Bicycle) vehicle;
@@ -66,18 +77,12 @@ public class VehicleOperationsProvider {
                                 .setColumn(DatabaseConstants.BICYCLE_PEDAL_NUMBER, literal(bicycle.getPedalsNumber()))
                                 .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(bicycle.getPlateNumber())))
                                 .build();
-                        BoundStatement insertBicycle = session.prepare(bicycleEntityHelper.insert().build())
-                                .bind()
-                                .setUuid(DatabaseConstants.ID, bicycle.getId())
-                                .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, bicycle.getDiscriminator())
-                                .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, bicycle.getPlateNumber())
-                                .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, bicycle.getBasePrice())
-                                .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, bicycle.isArchive())
-                                .setInt(DatabaseConstants.VEHICLE_VERSION, bicycle.getVersion())
-                                .setInt(DatabaseConstants.BICYCLE_PEDAL_NUMBER, bicycle.getPedalsNumber());
+
+                        insertVehicleTableBuilder = insertVehicleTableBuilder
+                                .value(DatabaseConstants.BICYCLE_PEDAL_NUMBER, literal((bicycle.getPedalsNumber())));
 
                         BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.LOGGED)
-                                .addStatements(insertValues, insertBicycle);
+                                .addStatements(insertValues, insertVehicleTableBuilder.build());
 
                         yield batchStatementBuilder.build();
                     }
@@ -85,25 +90,24 @@ public class VehicleOperationsProvider {
                     case DatabaseConstants.CAR_DISCRIMINATOR -> {
                         Car car = (Car) vehicle;
 
+
+
                         SimpleStatement insertValues = QueryBuilder.update(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                                 .setColumn(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(car.getEngineDisplacement()))
                                 .setColumn(DatabaseConstants.CAR_TRANSMISSION_TYPE, literal(car.getTransmissionType().toString()))
                                 .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(car.getPlateNumber())))
                                 .build();
 
-                        BoundStatement insertCar = session.prepare(carEntityHelper.insert().build())
-                                .bind()
-                                .setUuid(DatabaseConstants.ID, car.getId())
-                                .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, car.getDiscriminator())
-                                .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, car.getPlateNumber())
-                                .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, car.getBasePrice())
-                                .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, car.isArchive())
-                                .setInt(DatabaseConstants.VEHICLE_VERSION, car.getVersion())
-                                .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, car.getEngineDisplacement())
-                                .setString(DatabaseConstants.CAR_TRANSMISSION_TYPE, car.getTransmissionType().toString());
+
+                        insertVehicleTableBuilder = insertVehicleTableBuilder
+                                .value(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(car.getEngineDisplacement()))
+                                .value(DatabaseConstants.CAR_TRANSMISSION_TYPE, literal(car.getTransmissionType().toString()));
+
+                        //System.out.println("Query for insert values: " + insertValues.getQuery());
+                        System.out.println("Query: " + insertVehicleTableBuilder.build().getQuery());
 
                         BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.LOGGED)
-                                .addStatements(insertValues, insertCar);
+                                .addStatements(insertValues, insertVehicleTableBuilder.build());
 
                         yield batchStatementBuilder.build();
                     }
@@ -114,24 +118,20 @@ public class VehicleOperationsProvider {
                                 .setColumn(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(moped.getEngineDisplacement()))
                                 .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(moped.getPlateNumber())))
                                 .build();
-                        BoundStatement insertMoped = session.prepare(mopedEntityHelper.insert().build())
-                                .bind()
-                                .setUuid(DatabaseConstants.ID, moped.getId())
-                                .setString(DatabaseConstants.VEHICLE_DISCRIMINATOR, moped.getDiscriminator())
-                                .setString(DatabaseConstants.VEHICLE_PLATE_NUMBER, moped.getPlateNumber())
-                                .setDouble(DatabaseConstants.VEHICLE_BASE_PRICE, moped.getBasePrice())
-                                .setBoolean(DatabaseConstants.VEHICLE_ARCHIVE, moped.isArchive())
-                                .setInt(DatabaseConstants.VEHICLE_VERSION, moped.getVersion())
-                                .setInt(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, moped.getEngineDisplacement());
+
+                        insertVehicleTableBuilder = insertVehicleTableBuilder
+                                .value(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(moped.getEngineDisplacement()));
 
                         BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.LOGGED)
-                                .addStatements(insertValues, insertMoped);
+                                .addStatements(insertValues, insertVehicleTableBuilder.build());
 
                         yield batchStatementBuilder.build();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + vehicle.getDiscriminator());
                 }
         );
+
+        System.out.println("Vehicle insert result: " + resultSet.wasApplied());
     }
 
     public Vehicle findById(UUID id) {
@@ -249,7 +249,6 @@ public class VehicleOperationsProvider {
         }
     }
 
-    //todo DONE refactor so it performs updates on 2 tables
     public boolean update(Integer version, Vehicle vehicle) {
         List<Field> fields = new ArrayList<>();
         getAllFields(fields, vehicle.getClass());
@@ -295,7 +294,6 @@ public class VehicleOperationsProvider {
                         .ifColumn(DatabaseConstants.VEHICLE_VERSION).isEqualTo(literal(version))
                         .build();
 
-                //todo DONE create second update for plate number table, execute in batch
                 SimpleStatement findPlateNumber = QueryBuilder.selectFrom(DatabaseConstants.VEHICLE_TABLE)
                         .column(DatabaseConstants.VEHICLE_PLATE_NUMBER)
                         .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(vehicle.getId())))
@@ -327,20 +325,34 @@ public class VehicleOperationsProvider {
     }
 
     public boolean changeVehiclePlateNumber(Vehicle vehicle, String newPlateNumber) {
-        //todo check discriminator insert more fields ....
-        // Insert row with the new plate number
-        SimpleStatement insertNewPlateNumberRow = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+
+        RegularInsert insertNewPlateNumberRowBuilder = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(newPlateNumber))
                 .value(DatabaseConstants.ID, literal(vehicle.getId()))
                 .value(DatabaseConstants.VEHICLE_DISCRIMINATOR, literal(vehicle.getDiscriminator()))
                 .value(DatabaseConstants.VEHICLE_VERSION, literal(vehicle.getVersion()))
                 .value(DatabaseConstants.VEHICLE_ARCHIVE, literal(vehicle.isArchive()))
                 .value(DatabaseConstants.VEHICLE_RENTED, literal(vehicle.isRented()))
-                .value(DatabaseConstants.VEHICLE_BASE_PRICE, literal(vehicle.getBasePrice()))
-                .ifNotExists()
-                .build();
+                .value(DatabaseConstants.VEHICLE_BASE_PRICE, literal(vehicle.getBasePrice()));
 
-        boolean result = session.execute(insertNewPlateNumberRow).wasApplied();
+        if (vehicle.getDiscriminator().equals(DatabaseConstants.BICYCLE_DISCRIMINATOR)) {
+            Bicycle bicycle = (Bicycle) vehicle;
+            insertNewPlateNumberRowBuilder = insertNewPlateNumberRowBuilder
+                    .value(DatabaseConstants.BICYCLE_PEDAL_NUMBER, literal((bicycle.getPedalsNumber())));
+        }
+        else if (vehicle.getDiscriminator().equals(DatabaseConstants.CAR_DISCRIMINATOR)) {
+            Car car = (Car) vehicle;
+            insertNewPlateNumberRowBuilder = insertNewPlateNumberRowBuilder
+                    .value(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(car.getEngineDisplacement()))
+                    .value(DatabaseConstants.CAR_TRANSMISSION_TYPE, literal(car.getTransmissionType().toString()));
+        }
+        else {
+            Moped moped = (Moped) vehicle;
+            insertNewPlateNumberRowBuilder = insertNewPlateNumberRowBuilder
+                    .value(DatabaseConstants.MOTOR_VEHICLE_ENGINE_DISPLACEMENT, literal(moped.getEngineDisplacement()));
+        }
+
+        boolean result = session.execute(insertNewPlateNumberRowBuilder.ifNotExists().build()).wasApplied();
 
         if (!result) {
             return false; // The new plate number already exists

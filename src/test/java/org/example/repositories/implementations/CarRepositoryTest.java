@@ -1,7 +1,6 @@
 package org.example.repositories.implementations;
 
 import org.example.dao.VehicleDao;
-import org.example.dao.VehicleMapper;
 import org.example.model.vehicle.Car;
 import org.example.model.vehicle.Vehicle;
 import org.example.repositories.interfaces.IVehicleRepository;
@@ -10,11 +9,9 @@ import org.junit.jupiter.api.*;
 import org.example.dao.VehicleMapperBuilder;
 
 import java.util.UUID;
-
-import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.createKeyspace;
 import static org.junit.jupiter.api.Assertions.*;
 
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CarRepositoryTest {
 
     private final IVehicleRepository vehicleRepository = new VehicleRepository();
@@ -36,7 +33,11 @@ class CarRepositoryTest {
         assertEquals(car.getId(), vehicleRepository.findById(car.getId()).getId());
         Car car2 = new Car(UUID.randomUUID(), "DRUGIEAUTO", 1000.0,6, Car.TransmissionType.AUTOMATIC);
         vehicleRepository.save(car2);
-        assertEquals(car2.getId(), vehicleRepository.findById(car2.getId()).getId());
+        Car savedCar = (Car) vehicleRepository.findById(car2.getId());
+
+        assertEquals(car2.getId(), savedCar.getId());
+        assertEquals(car2.getEngineDisplacement(), savedCar.getEngineDisplacement());
+        assertEquals(car2.getTransmissionType(), savedCar.getTransmissionType());
         assertEquals(2, vehicleRepository.findAllCars().size());
     }
 
@@ -107,16 +108,9 @@ class CarRepositoryTest {
         vehicleRepository.save(car2);
 
         String conflictingPlateNumber = "AABB123";
-        Car modifiedCar2 = Car.builder()
-                .id(car2.getId())
-                .plateNumber(conflictingPlateNumber)
-                .basePrice(car2.getBasePrice())
-                .discriminator(DatabaseConstants.CAR_DISCRIMINATOR)
-                .transmissionType(car2.getTransmissionType())
-                .build();
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            vehicleRepository.save(modifiedCar2);
+            vehicleRepository.changeVehiclePlateNumber(car2.getId(), conflictingPlateNumber);
         });
 
         String expectedMessage = "Plate number already taken!";
