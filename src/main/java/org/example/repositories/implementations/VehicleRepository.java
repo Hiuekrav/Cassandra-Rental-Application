@@ -1,6 +1,5 @@
 package org.example.repositories.implementations;
 
-import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
@@ -13,7 +12,6 @@ import org.example.model.vehicle.Bicycle;
 import org.example.model.vehicle.Car;
 import org.example.model.vehicle.Moped;
 import org.example.model.vehicle.Vehicle;
-import org.example.repositories.ApplicationContext;
 import org.example.repositories.interfaces.IVehicleRepository;
 import org.example.utils.consts.DatabaseConstants;
 
@@ -151,6 +149,14 @@ public class VehicleRepository extends ObjectRepository implements IVehicleRepos
             throw new RuntimeException("Change rent status failed");
         }
         return findById(id);
+    }
+
+    @Override
+    public void changeVehiclePlateNumber(UUID id, String plateNumber) {
+        Vehicle foundVehicle = vehicleDao.findById(id);
+        if (!vehicleDao.changeVehiclePlateNumber(foundVehicle, plateNumber)) {
+            throw new RuntimeException("Plate number already taken!");
+        }
     }
 
     @Override

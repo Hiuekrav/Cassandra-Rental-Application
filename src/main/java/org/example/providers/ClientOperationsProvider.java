@@ -131,7 +131,6 @@ public class ClientOperationsProvider {
     }
 
 
-
     public boolean changeClientEmail(Client client, String newEmail) {
 
         // insert row with new email

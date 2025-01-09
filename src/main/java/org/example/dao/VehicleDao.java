@@ -2,10 +2,12 @@ package org.example.dao;
 
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.mapper.annotations.*;
+import org.example.model.Client;
 import org.example.model.vehicle.Bicycle;
 import org.example.model.vehicle.Car;
 import org.example.model.vehicle.Moped;
 import org.example.model.vehicle.Vehicle;
+import org.example.providers.ClientOperationsProvider;
 import org.example.providers.VehicleOperationsProvider;
 
 import java.util.List;
@@ -57,6 +59,11 @@ public interface VehicleDao {
     @QueryProvider(providerClass = VehicleOperationsProvider.class,
             entityHelpers = {Bicycle.class, Car.class, Moped.class})
     boolean updateRented(Vehicle vehicle, boolean rented);
+
+    @StatementAttributes(consistencyLevel = "QUORUM", pageSize = 1)
+    @QueryProvider(providerClass = VehicleOperationsProvider.class,
+            entityHelpers = {Bicycle.class, Car.class, Moped.class})
+    boolean changeVehiclePlateNumber(Vehicle vehicle, String newPlateNumber);
 
     @StatementAttributes(consistencyLevel = "QUORUM")
     @Delete

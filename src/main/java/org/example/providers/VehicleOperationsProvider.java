@@ -162,16 +162,12 @@ public class VehicleOperationsProvider {
         if (plateNumberRow == null) {
             throw new RuntimeException("Could not find vehicle with plate number: " + plateNumber);
         }
-        Select findVehicle = QueryBuilder.selectFrom(CqlIdentifier.fromCql(DatabaseConstants.VEHICLE_TABLE))
-                .all().where(Relation.column(DatabaseConstants.ID)
-                        .isEqualTo(literal(plateNumberRow.getUuid(DatabaseConstants.ID))));
 
-        Row vehicleRow = session.execute(findVehicle.build()).one();
-        String discriminator = vehicleRow.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR);
+        String discriminator = plateNumberRow.getString(DatabaseConstants.VEHICLE_DISCRIMINATOR);
         return switch (discriminator) {
-            case DatabaseConstants.BICYCLE_DISCRIMINATOR -> getBicycle(vehicleRow);
-            case DatabaseConstants.CAR_DISCRIMINATOR -> getCar(vehicleRow);
-            case DatabaseConstants.MOPED_DISCRIMINATOR -> getMoped(vehicleRow);
+            case DatabaseConstants.BICYCLE_DISCRIMINATOR -> getBicycle(plateNumberRow);
+            case DatabaseConstants.CAR_DISCRIMINATOR -> getCar(plateNumberRow);
+            case DatabaseConstants.MOPED_DISCRIMINATOR -> getMoped(plateNumberRow);
             default -> throw new IllegalArgumentException("Invalid discriminator: " + discriminator);
         };
     }
@@ -253,7 +249,7 @@ public class VehicleOperationsProvider {
         }
     }
 
-    //todo refactor so it performs updates on 2 tables
+    //todo DONE refactor so it performs updates on 2 tables
     public boolean update(Integer version, Vehicle vehicle) {
         List<Field> fields = new ArrayList<>();
         getAllFields(fields, vehicle.getClass());
@@ -267,7 +263,6 @@ public class VehicleOperationsProvider {
                                 && field.getAnnotation(ClusteringColumn.class)==null
                                 && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_RENTED)
                                 && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_VERSION)
-
                                 && !Objects.equals(field.getAnnotation(CqlName.class).value(), DatabaseConstants.VEHICLE_PLATE_NUMBER);
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException(e);
@@ -277,12 +272,11 @@ public class VehicleOperationsProvider {
 
 
         try {
-            Update update;
             BatchStatementBuilder updates = BatchStatement.builder(BatchType.LOGGED);
-            for (int i = 0; i < fields.size(); i++) {
-                fields.get(i).setAccessible(true);
+            for (Field field : fields) {
+                field.setAccessible(true);
 
-                Object value = fields.get(i).get(vehicle);
+                Object value = field.get(vehicle);
 
                 // Manually convert custom types to CQL-compatible types using your codec
                 TransmissionTypeCodec transmissionTypeCodec = new TransmissionTypeCodec();
@@ -290,19 +284,24 @@ public class VehicleOperationsProvider {
                     value = transmissionTypeCodec.format((Car.TransmissionType) value);
                 }
 
-                update = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
-                        .setColumn(fields.get(i).getAnnotation(CqlName.class).value(), literal(value))
-                        .setColumn(DatabaseConstants.VEHICLE_VERSION, literal(version + 1 + i))
+                SimpleStatement vehicleUpdate = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
+                        .setColumn(field.getAnnotation(CqlName.class).value(), literal(value))
+                        .setColumn(DatabaseConstants.VEHICLE_VERSION, literal(version + 1))
                         .where(Relation.column(DatabaseConstants.ID)
                                 .isEqualTo(literal(vehicle.getId())))
                         .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
                                 .isEqualTo(literal(vehicle.getDiscriminator())))
-                        .ifColumn(DatabaseConstants.VEHICLE_VERSION).isEqualTo(literal(version));
+                        .ifColumn(DatabaseConstants.VEHICLE_VERSION).isEqualTo(literal(version))
+                        .build();
 
-                //todo create second update for plate number table, execute in batch
+                //todo DONE create second update for plate number table, execute in batch
+                SimpleStatement plateNumberUpdate = QueryBuilder.update(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                        .setColumn(field.getAnnotation(CqlName.class).value(), literal(value))
+                        .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(vehicle.getPlateNumber())))
+                        .build();
 
-                fields.get(i).setAccessible(false);
-                updates.addStatement(update.build());
+                updates.addStatements(vehicleUpdate, plateNumberUpdate);
+                field.setAccessible(false);
             }
 
             ResultSet resultSet = session.execute(updates.build());
@@ -314,6 +313,45 @@ public class VehicleOperationsProvider {
             throw new RuntimeException(e);
         }
     }
+
+    public boolean changeVehiclePlateNumber(Vehicle vehicle, String newPlateNumber) {
+
+        // Insert row with the new plate number
+        SimpleStatement insertNewPlateNumberRow = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(newPlateNumber))
+                .value(DatabaseConstants.ID, literal(vehicle.getId()))
+                .value(DatabaseConstants.VEHICLE_DISCRIMINATOR, literal(vehicle.getDiscriminator()))
+                .value(DatabaseConstants.VEHICLE_VERSION, literal(vehicle.getVersion()))
+                .value(DatabaseConstants.VEHICLE_ARCHIVE, literal(vehicle.isArchive()))
+                .value(DatabaseConstants.VEHICLE_RENTED, literal(vehicle.isRented()))
+                .value(DatabaseConstants.VEHICLE_BASE_PRICE, literal(vehicle.getBasePrice()))
+                .ifNotExists()
+                .build();
+
+        boolean result = session.execute(insertNewPlateNumberRow).wasApplied();
+
+        if (!result) {
+            return false; // The new plate number already exists
+        }
+
+        // Delete row with the old plate number
+        SimpleStatement deleteOldPlateNumberRow = QueryBuilder.deleteFrom(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(vehicle.getPlateNumber())))
+                .build();
+
+        // Update plate number in the main vehicle table
+        SimpleStatement updateMainTableVehiclePlateNumber = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
+                .setColumn(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(newPlateNumber))
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(vehicle.getId())))
+                .build();
+
+        BatchStatement batchStatement = BatchStatement.builder(BatchType.LOGGED)
+                .addStatements(updateMainTableVehiclePlateNumber, deleteOldPlateNumberRow)
+                .build();
+
+        return session.execute(batchStatement).wasApplied();
+    }
+
 
     public boolean updateRented(Vehicle vehicle, boolean rented) {
         Update update = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
@@ -342,5 +380,24 @@ public class VehicleOperationsProvider {
         return true;
     }
 
+    public boolean delete(Vehicle vehicle) {
+        SimpleStatement deleteFromVehicleTable = QueryBuilder.deleteFrom(DatabaseConstants.VEHICLE_TABLE)
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(vehicle.getId())))
+                .build();
 
+        SimpleStatement deleteFromPlateNumberTable = QueryBuilder.deleteFrom(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(vehicle.getPlateNumber())))
+                .build();
+
+        SimpleStatement deleteFromDiscriminatorTable = QueryBuilder.deleteFrom(DatabaseConstants.VEHICLE_BY_DISCRIMINATOR_TABLE)
+                .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR).isEqualTo(literal(vehicle.getDiscriminator())))
+                .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(vehicle.getId())))
+                .build();
+
+        BatchStatement batchStatement = BatchStatement.builder(BatchType.LOGGED)
+                .addStatements(deleteFromVehicleTable, deleteFromPlateNumberTable, deleteFromDiscriminatorTable)
+                .build();
+
+        return session.execute(batchStatement).wasApplied();
+    }
 }

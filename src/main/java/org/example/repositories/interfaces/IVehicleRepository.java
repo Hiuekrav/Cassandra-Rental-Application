@@ -22,6 +22,8 @@ public interface IVehicleRepository extends IObjectRepository<Vehicle> {
 
     Vehicle changeRentedStatus(UUID id, Boolean status);
 
+    void changeVehiclePlateNumber(UUID id, String plateNumber);
+
     List<Vehicle> findAll();
 
     CqlSession getSession();

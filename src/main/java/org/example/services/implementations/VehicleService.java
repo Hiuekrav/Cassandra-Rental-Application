@@ -106,7 +106,6 @@ public class VehicleService implements IVehicleService {
     public Bicycle updateBicycle(BicycleUpdateDTO updateDTO) {
         Bicycle modifiedBicycle = Bicycle.builder().
                 id(updateDTO.getId()).
-                plateNumber(updateDTO.getPlateNumber()).
                 basePrice(updateDTO.getBasePrice()).
                 pedalsNumber(updateDTO.getPedalNumber()).
                 archive(updateDTO.isArchive())
@@ -117,6 +116,10 @@ public class VehicleService implements IVehicleService {
             throw new IllegalArgumentException("No bicycle found with id" + updateDTO.getId());
         }
 
+        if (updateDTO.getPlateNumber() != null) {
+            vehicleRepository.changeVehiclePlateNumber(updateDTO.getId(), updateDTO.getPlateNumber());
+        }
+
         return (Bicycle) vehicleRepository.save(modifiedBicycle);
     }
 
@@ -124,7 +127,6 @@ public class VehicleService implements IVehicleService {
     public Car updateCar(CarUpdateDTO updateDTO) {
         Car modifiedCar = Car.builder()
                 .id(updateDTO.getId())
-                .plateNumber(updateDTO.getPlateNumber())
                 .basePrice(updateDTO.getBasePrice())
                 .transmissionType(
                         updateDTO.getTransmissionType() == null ? null : Car.TransmissionType.valueOf(updateDTO.getTransmissionType())
@@ -137,6 +139,11 @@ public class VehicleService implements IVehicleService {
         if (!Objects.equals(foundVehicle.getDiscriminator(), DatabaseConstants.CAR_DISCRIMINATOR)) {
             throw new IllegalArgumentException("No car found with id" + updateDTO.getId());
         }
+
+        if (updateDTO.getPlateNumber() != null) {
+            vehicleRepository.changeVehiclePlateNumber(updateDTO.getId(), updateDTO.getPlateNumber());
+        }
+
         return (Car) vehicleRepository.save(modifiedCar);
     }
 
@@ -144,7 +151,6 @@ public class VehicleService implements IVehicleService {
     public Moped updateMoped(MopedUpdateDTO updateDTO) {
         Moped modifiedMoped = Moped.builder().
                 id(updateDTO.getId()).
-                plateNumber(updateDTO.getPlateNumber()).
                 basePrice(updateDTO.getBasePrice()).
                 archive(updateDTO.isArchive()).
                 engineDisplacement(updateDTO.getEngineDisplacement())
@@ -154,6 +160,11 @@ public class VehicleService implements IVehicleService {
         if (!Objects.equals(foundVehicle.getDiscriminator(), DatabaseConstants.MOPED_DISCRIMINATOR)) {
             throw new IllegalArgumentException("No moped found with id" + updateDTO.getId());
         }
+
+        if (updateDTO.getPlateNumber() != null) {
+            vehicleRepository.changeVehiclePlateNumber(updateDTO.getId(), updateDTO.getPlateNumber());
+        }
+
         return (Moped) vehicleRepository.save(modifiedMoped);
     }
 

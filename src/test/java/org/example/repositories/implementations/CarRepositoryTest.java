@@ -86,7 +86,7 @@ class CarRepositoryTest {
     }
 
     @Test
-    void updateCar_EditPlateNumber() {
+    void updateCar_EditPlateNumber_Success() {
         Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
         vehicleRepository.save(car);
         Double newPrice = 200.0;
@@ -105,6 +105,40 @@ class CarRepositoryTest {
         assertEquals(newPlateNumber, fromIdTable.getPlateNumber());
         assertEquals(car.getId(), fromPlateNumberTable.getId());
     }
+
+    @Test
+    void updateCar_EditPlateNumber_Failure() {
+
+        Car car1 = new Car(UUID.randomUUID(), "AABB123", 100.0, 3, Car.TransmissionType.MANUAL);
+        vehicleRepository.save(car1);
+
+        Car car2 = new Car(UUID.randomUUID(), "CCDD123", 150.0, 4, Car.TransmissionType.AUTOMATIC);
+        vehicleRepository.save(car2);
+
+        String conflictingPlateNumber = "AABB123";
+        Car modifiedCar2 = Car.builder()
+                .id(car2.getId())
+                .plateNumber(conflictingPlateNumber)
+                .basePrice(car2.getBasePrice())
+                .discriminator(DatabaseConstants.CAR_DISCRIMINATOR)
+                .transmissionType(car2.getTransmissionType())
+                .build();
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            vehicleRepository.save(modifiedCar2);
+        });
+
+        String expectedMessage = "Plate number already taken!";
+        String actualMessage = exception.getMessage();
+        assertEquals(expectedMessage, actualMessage);
+
+        Car unchangedCar2 = (Car) vehicleRepository.findById(car2.getId());
+        assertEquals("CCDD123", unchangedCar2.getPlateNumber());
+
+        Car unchangedCar1 = (Car) vehicleRepository.findById(car1.getId());
+        assertEquals("AABB123", unchangedCar1.getPlateNumber());
+    }
+
 
     @Test
     void updateCar_OptimisticLockException() {
