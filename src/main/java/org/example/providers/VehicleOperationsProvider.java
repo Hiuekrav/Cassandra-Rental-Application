@@ -272,7 +272,8 @@ public class VehicleOperationsProvider {
 
 
         try {
-            BatchStatementBuilder updates = BatchStatement.builder(BatchType.LOGGED);
+            BatchStatementBuilder updateVehicleTable = BatchStatement.builder(BatchType.LOGGED);
+            BatchStatementBuilder updatePlateNumberTable = BatchStatement.builder(BatchType.LOGGED);
             for (Field field : fields) {
                 field.setAccessible(true);
 
@@ -295,17 +296,28 @@ public class VehicleOperationsProvider {
                         .build();
 
                 //todo DONE create second update for plate number table, execute in batch
-                SimpleStatement plateNumberUpdate = QueryBuilder.update(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
-                        .setColumn(field.getAnnotation(CqlName.class).value(), literal(value))
-                        .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(vehicle.getPlateNumber())))
+                SimpleStatement findPlateNumber = QueryBuilder.selectFrom(DatabaseConstants.VEHICLE_TABLE)
+                        .column(DatabaseConstants.VEHICLE_PLATE_NUMBER)
+                        .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(vehicle.getId())))
                         .build();
 
-                updates.addStatements(vehicleUpdate, plateNumberUpdate);
+                Row foundPlateNumber = session.execute(findPlateNumber).one();
+                String plateNumberString = foundPlateNumber.getString(DatabaseConstants.VEHICLE_PLATE_NUMBER);
+
+                SimpleStatement plateNumberUpdate = QueryBuilder.update(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
+                        .setColumn(field.getAnnotation(CqlName.class).value(), literal(value))
+                        .where(Relation.column(DatabaseConstants.VEHICLE_PLATE_NUMBER).isEqualTo(literal(plateNumberString)))
+                        .build();
+
+
+                updateVehicleTable.addStatements(vehicleUpdate);
+                updatePlateNumberTable.addStatements(plateNumberUpdate);
                 field.setAccessible(false);
             }
 
-            ResultSet resultSet = session.execute(updates.build());
-            return resultSet.wasApplied();
+            ResultSet resultSet1 = session.execute(updateVehicleTable.build());
+            ResultSet resultSet2 = session.execute(updatePlateNumberTable.build());
+            return resultSet1.wasApplied() && resultSet2.wasApplied();
 
             //System.out.println("Batch update applied: " + applied);
 
@@ -315,7 +327,7 @@ public class VehicleOperationsProvider {
     }
 
     public boolean changeVehiclePlateNumber(Vehicle vehicle, String newPlateNumber) {
-
+        //todo check discriminator insert more fields ....
         // Insert row with the new plate number
         SimpleStatement insertNewPlateNumberRow = QueryBuilder.insertInto(DatabaseConstants.VEHICLE_BY_PLATE_NUMBER_TABLE)
                 .value(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(newPlateNumber))
@@ -343,10 +355,12 @@ public class VehicleOperationsProvider {
         SimpleStatement updateMainTableVehiclePlateNumber = QueryBuilder.update(DatabaseConstants.VEHICLE_TABLE)
                 .setColumn(DatabaseConstants.VEHICLE_PLATE_NUMBER, literal(newPlateNumber))
                 .where(Relation.column(DatabaseConstants.ID).isEqualTo(literal(vehicle.getId())))
+                .where(Relation.column(DatabaseConstants.VEHICLE_DISCRIMINATOR)
+                        .isEqualTo(literal(vehicle.getDiscriminator())))
                 .build();
 
         BatchStatement batchStatement = BatchStatement.builder(BatchType.LOGGED)
-                .addStatements(updateMainTableVehiclePlateNumber, deleteOldPlateNumberRow)
+                .addStatements(deleteOldPlateNumberRow, updateMainTableVehiclePlateNumber)
                 .build();
 
         return session.execute(batchStatement).wasApplied();

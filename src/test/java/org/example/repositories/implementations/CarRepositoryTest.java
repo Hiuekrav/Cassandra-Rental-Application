@@ -89,19 +89,10 @@ class CarRepositoryTest {
     void updateCar_EditPlateNumber_Success() {
         Car car = new Car(UUID.randomUUID(), "AABB123", 100.0,3, Car.TransmissionType.MANUAL);
         vehicleRepository.save(car);
-        Double newPrice = 200.0;
-        Car.TransmissionType newTransmissionType = Car.TransmissionType.AUTOMATIC;
         String newPlateNumber = "AA1234";
-        Car modifiedCar = Car.builder()
-                .basePrice(newPrice)
-                .id(car.getId())
-                .plateNumber(newPlateNumber)
-                .discriminator(DatabaseConstants.CAR_DISCRIMINATOR)
-                .transmissionType(newTransmissionType).build();
-        vehicleRepository.save(modifiedCar);
-        assertEquals(newPrice, vehicleRepository.findById(car.getId()).getBasePrice());
+        vehicleRepository.changeVehiclePlateNumber(car.getId(), newPlateNumber);
         Car fromIdTable = (Car) vehicleRepository.findById(car.getId());
-        Car fromPlateNumberTable = (Car) vehicleRepository.findByPlateNumber(car.getPlateNumber());
+        Car fromPlateNumberTable = (Car) vehicleRepository.findByPlateNumber(newPlateNumber);
         assertEquals(newPlateNumber, fromIdTable.getPlateNumber());
         assertEquals(car.getId(), fromPlateNumberTable.getId());
     }
