@@ -29,13 +29,14 @@ public class ApplicationContext {
         session = CqlSession.builder( )
                 .addContactPoint(new InetSocketAddress("cassandra1", 9042))
                 .addContactPoint(new InetSocketAddress("cassandra2", 9043))
+                .addContactPoint(new InetSocketAddress("cassandra3", 9044))
                 .withLocalDatacenter("dc1")
                 .withAuthCredentials("cassandra", "cassandrapassword")
                 .build();
 
         CreateKeyspace keyspace = createKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
                 .ifNotExists()
-                .withSimpleStrategy(2)
+                .withSimpleStrategy(3)
                 .withDurableWrites(true);
         SimpleStatement createKeyspace = keyspace.build();
         session.execute(createKeyspace);
@@ -44,6 +45,7 @@ public class ApplicationContext {
         session = CqlSession.builder( )
                 .addContactPoint(new InetSocketAddress("cassandra1", 9042))
                 .addContactPoint(new InetSocketAddress("cassandra2", 9043))
+                .addContactPoint(new InetSocketAddress("cassandra3", 9044))
                 .withLocalDatacenter("dc1")
                 .withAuthCredentials("cassandra", "cassandrapassword")
                 .withKeyspace(CqlIdentifier.fromCql(DatabaseConstants.RENT_A_CAR_NAMESPACE))
